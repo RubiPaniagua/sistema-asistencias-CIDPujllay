@@ -1,0 +1,100 @@
+SISTEMA DE ASISTENCIAS
+
+Problemática:
+El primer problema es que todos nos registramos de manera manual la lista fisica propenso a errores
+Dificultad para generar un reporte, consultar o perdida de la lista fisica 
+Falta de orden en el momento de marcar asistencia, permitiéndoles a algunos no marcar respecto a la hora correcta a la que llegaron
+Aglomeración de datos al momento de mandar el registro o mostrar al debido monitor(a)
+Ineficiencia con las asistencias de los que trabajan vía remoto
+
+Objetivos:
+Crear un sistema que registre correctamente las asistencias, eliminando cualquier dificultad
+Facilitar el registro de asistencias para el administrador y darle mejor acceso a un reporte correspondiente
+
+Propuesta de solución: 
+
+Desarrollo e implementación de un Sistema Web Centralizado de Control de Asistencias Multimodal (Presencial y Remoto), diseñado para automatizar el registro, garantizar la precisión de los horarios y simplificar la generación de reportes administrativos. 
+
+desarrollar un sistema web que permita digitalizar el registro la consulta y la administracion
+identificación rapida a cada persona mediante un ID que registra automáticamente la fecha y la hora  esto permite para presencial como remota 
+Asistencia presencial:
+Componentes del Sistema
+1. Módulo Presencial (Estación Local)
+Ubicación: Una terminal o computadora fija dentro de las instalaciones.
+Mecanismo de marcado:
+Interfaz web responsiva y optimizada para registro rápido (por ejemplo: ingreso de DNI/Código de practicante o escaneo de código QR personal desde una tarjeta o celular).
+Sincronización de tiempo: La hora de registro es tomada automáticamente del servidor central, impidiendo que el usuario modifique la hora de llegada.
+Control de flujo: Pantalla de confirmación visual inmediata para evitar aglomeraciones e inconvenientes al marcar.
+2. Módulo Remoto (Acceso Web / Móvil desde Casa)
+Mecanismo de marcado:
+Inicio de sesión individual seguro con credenciales de practicante.
+Botón directo para marcar "Inicio de Jornada" y "Fin de Jornada".
+el responsable crea una sesión de asistencia que genera un codigo temporal 
+el participante  inicia sesión con el codigo generado mas su codigo y registra asistencia como remota 
+3. Panel Administrativo y Reportes
+Dashboard en tiempo real: Muestra al administrador quiénes han marcado asistencia presencial y remota al instante.
+Módulo de Reportes: Exportación automática de registros por rangos de fecha, estado (A tiempo, Tardanza, Falta) y modalidad (Presencial/Remoto) en formatos Excel y PDF.
+Gestión de Usuarios: Creación y asignación de roles (Administrador, Practicante Presencial, Practicante Remoto).
+Beneficios Directos frente a la Problemática
+Eliminación del papel y errores humanos: Sustituye la lista física por una base de datos segura y centralizada.
+Imposibilidad de alterar horas: El sistema asigna el timestamp (marca de tiempo) exacto del servidor en el momento de la interacción.
+Control unificado: Permite gestionar en una sola plataforma tanto al personal que asiste a la oficina como al que trabaja desde casa.
+Reportes instantáneos: El administrador obtiene consolidados de asistencia en pocos clics sin necesidad de digitar manualmente.
+flujos de entrada para asistencia presencial
+La persona ingrese su ID.
+El sistema busca sus datos.
+Se muestra nombre + carrera.
+El sistema obtiene fecha y hora automáticamente.
+Se registra la entrada.
+flujos de salida
+La persona ingrese su ID.
+El sistema encuentra la asistencia del día.
+Obtiene la hora actual.
+Registra la salida.
+flujos para asistencia remota 
+El responsable crea una sesión de asistencia.
+El sistema genera un código temporal.
+El participante inicia sesión e introduce el código.
+El sistema registra la asistencia.
+identificación de usuarios
+Cada persona tendrá un identificador único. Ejemplo:
+Código: 1025
+Nombre: xxxxx xxxx
+Carrera: Ingeniería de Software
+Estado: Activo
+panel administrativo
+el responsable visualiza las asistencia n una tabla
+como:
+el codigo 
+nombres 
+carrera 
+fecha entrada salida
+modalidad 
+justificaciones si llega tarde  
+gestion 
+el administrador podra
+registrar editar buscar o borrar 
+consultar su codigo asignar carreras borrarla 
+visualizar sus asistencia 
+modificar fechas 
+reportes
+el responsable podra descargar reportes 
+Reporte diario, semanal, mensual.
+Asistencia por persona / por carrera.
+Llegadas tardías.
+Personas sin salida registrada.
+Asistencia presencial vs. remota.
+Exportación, preferentemente a PDF 
+
+arquitectura tecnologica propuesta 
+frontend:
+html tailwindcss js  
+backend:
+laravel php
+bd:
+mysql 
+reportes:
+hosting:
+entorno de desarrollo propuesto
+vs code 
+github git
