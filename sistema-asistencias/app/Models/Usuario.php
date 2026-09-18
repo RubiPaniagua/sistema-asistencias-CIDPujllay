@@ -18,6 +18,7 @@ class Usuario extends Authenticatable
         'rol',
         'modalidad',
         'activo',
+        'email',
         'password',
     ];
 

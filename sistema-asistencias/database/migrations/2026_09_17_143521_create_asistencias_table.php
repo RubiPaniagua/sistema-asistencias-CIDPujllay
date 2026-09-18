@@ -6,20 +6,36 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('asistencias', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('usuario_id')
+                ->constrained('usuarios');
+
+            $table->date('fecha');
+
+            $table->dateTime('hora_entrada')
+                ->nullable();
+
+            $table->dateTime('hora_salida')
+                ->nullable();
+
+            $table->enum('modalidad', ['presencial', 'remoto']);
+
+            $table->enum('estado', ['a_tiempo', 'tardanza'])
+                ->nullable();
+
+            $table->text('justificacion')
+                ->nullable();
+
             $table->timestamps();
+
+            $table->unique(['usuario_id', 'fecha']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('asistencias');
