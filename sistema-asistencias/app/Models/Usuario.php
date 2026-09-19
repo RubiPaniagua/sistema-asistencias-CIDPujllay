@@ -11,6 +11,8 @@ class Usuario extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $table = 'usuarios';
+
     protected $fillable = [
         'codigo',
         'nombre',
@@ -20,6 +22,7 @@ class Usuario extends Authenticatable
         'activo',
         'email',
         'password',
+        'email',
     ];
 
     protected $hidden = [
