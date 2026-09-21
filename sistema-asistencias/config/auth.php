@@ -35,7 +35,7 @@ return [
     */
 
     'providers' => [
-        'usuarios' => [
+        'usuarios' => [ // <-- Cambiado de 'users' a 'usuarios' para que coincida con el guard
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', Usuario::class),
         ],
