@@ -13,7 +13,9 @@ class UsuarioSeeder extends Seeder
         // Admin
         Usuario::create([
             'codigo' => 'ADM001',
+            'dni' => '00000001',
             'nombre' => 'Admin General',
+            'institucion' => 'SENATI',
             'carrera_id' => 1,
             'rol' => 'admin',
             'modalidad' => null,
@@ -25,7 +27,9 @@ class UsuarioSeeder extends Seeder
         // Practicante Presencial
         Usuario::create([
             'codigo' => 'P202601',
+            'dni' => '74829103',
             'nombre' => 'Juan Pérez',
+            'institucion' => 'SENATI',
             'carrera_id' => 1,
             'rol' => 'practicante',
             'modalidad' => 'presencial',
@@ -35,7 +39,9 @@ class UsuarioSeeder extends Seeder
         // Practicante Remoto
         Usuario::create([
             'codigo' => 'R202602',
+            'dni' => '83920192',
             'nombre' => 'Maria Lopez',
+            'institucion' => 'UNSA',
             'carrera_id' => 2,
             'rol' => 'practicante',
             'modalidad' => 'remoto',

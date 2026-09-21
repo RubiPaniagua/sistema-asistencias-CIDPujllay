@@ -4,27 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Sistema de Asistencias - CID Pujllay')</title>
-    <!-- Tailwind CSS desde CDN para maquetación rápida -->
+    <!-- Tailwind CSS desde CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     @stack('styles')
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+<body class="bg-gradient-to-b from-[#0a203d] via-[#0f3b70] to-[#07172e] text-white font-sans min-h-screen flex flex-col justify-between antialiased">
 
-    <!-- Navegación simple opcional -->
-    <header class="bg-indigo-700 text-white shadow-md p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold">CID Pujllay - Asistencias</h1>
-            <span id="reloj-servidor" class="text-sm bg-indigo-800 px-3 py-1 rounded-full"></span>
-        </div>
-    </header>
-
-    <!-- Contenido Dinámico -->
-    <main class="flex-grow container mx-auto p-4 flex flex-col justify-center">
+    <!-- Contenido Dinámico Centrado -->
+    <main class="flex-grow flex items-center justify-center p-4">
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 text-center py-3 text-sm text-gray-500">
+    <!-- Footer Discreto -->
+    <footer class="text-center py-4 text-xs text-slate-400/60 border-t border-white/5 backdrop-blur-sm">
         &copy; {{ date('Y') }} CID Pujllay. Todos los derechos reservados.
     </footer>
 

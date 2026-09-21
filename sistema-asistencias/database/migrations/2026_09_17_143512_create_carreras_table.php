@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('carreras', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre'); // <-- Columna agregada para almacenar el nombre de la carrera/especialidad
             $table->timestamps();
         });
     }
