@@ -12,13 +12,13 @@ class AsistenciaController extends Controller
 {
     public function marcarEntrada(Request $request)
     {
-        $codigo = $request->input('codigo');
+        $dni = $request->input('dni');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
         // Reglas 1 y 3: Buscar usuario activo
         $usuario = Usuario::with('carrera')
-            ->where('codigo', $codigo)
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 

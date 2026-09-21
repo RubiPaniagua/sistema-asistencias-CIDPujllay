@@ -12,7 +12,7 @@ class UsuarioSeeder extends Seeder
     {
         // Admin
         Usuario::create([
-            'codigo' => 'ADM001',
+            'dni' => '10000001',
             'nombre' => 'Admin General',
             'carrera_id' => 1,
             'rol' => 'admin',
@@ -24,7 +24,7 @@ class UsuarioSeeder extends Seeder
 
         // Practicante Presencial
         Usuario::create([
-            'codigo' => 'P202601',
+            'dni' => '72000001',
             'nombre' => 'Juan Pérez',
             'carrera_id' => 1,
             'rol' => 'practicante',
@@ -34,7 +34,7 @@ class UsuarioSeeder extends Seeder
 
         // Practicante Remoto
         Usuario::create([
-            'codigo' => 'R202602',
+            'dni' => '72000002',
             'nombre' => 'Maria Lopez',
             'carrera_id' => 2,
             'rol' => 'practicante',

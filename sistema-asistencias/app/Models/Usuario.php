@@ -12,12 +12,13 @@ class Usuario extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'codigo',
+        'dni',
         'nombre',
         'carrera_id',
         'rol',
         'modalidad',
         'activo',
+        'email',
         'password',
     ];
 

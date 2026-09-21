@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('sesion_remotas', function (Blueprint $table) {
             $table->id();
+            $table->string('codigo_temporal', 10)->unique();
+            $table->foreignId('generado_por')->constrained('usuarios')->cascadeOnDelete();
+            $table->dateTime('expira_en');
+            $table->boolean('usado')->default(false);
             $table->timestamps();
         });
     }
