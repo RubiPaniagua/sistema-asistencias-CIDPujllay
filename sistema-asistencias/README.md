@@ -795,3 +795,6 @@ IDE → Visual Studio Code
 ## 📄 Nota
 
 Este README funciona como guía técnica del proyecto y puede actualizarse conforme se implementen nuevos módulos.
+
+#### Correr este comando para las migraciones y la creación de los seeders
+php artisan migrate:fresh --seed

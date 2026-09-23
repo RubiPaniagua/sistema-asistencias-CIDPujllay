@@ -50,3 +50,9 @@ Route::get('/admin/usuarios', function () {
 Route::get('/admin/usuarios/crear', function () {
     return view('admin.usuarios.create');
 })->name('admin.usuarios.create');
+
+Route::get('/carreras', [App\Http\Controllers\CarreraController::class, 'index'])->name('carreras.index');
+Route::get('/carreras/{carrera}', [App\Http\Controllers\CarreraController::class, 'show'])->name('carreras.show');
+Route::post('/carreras', [App\Http\Controllers\CarreraController::class, 'store'])->name('carreras.store');
+Route::put('/carreras/{carrera}', [App\Http\Controllers\CarreraController::class, 'update'])->name('carreras.update');
+Route::delete('/carreras/carrera', [App\Http\Controllers\CarreraController::class, 'destroy'])->name('carreras.destroy');

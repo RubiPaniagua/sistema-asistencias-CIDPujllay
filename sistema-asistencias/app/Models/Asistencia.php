@@ -11,6 +11,7 @@ class Asistencia extends Model
 
     protected $fillable = [
         'usuario_id',
+        'carrera_id',
         'fecha',
         'hora_entrada',
         'hora_salida',

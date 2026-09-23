@@ -11,12 +11,17 @@ return new class extends Migration
         Schema::create('usuarios', function (Blueprint $table) {
             $table->id();
 
-            $table->string('codigo')->unique();
-            $table->string('nombre');
+            $table->string('dni')->unique();
+            $table->string('nombres');
+            $table->string('apellidos');
 
             $table->foreignId('carrera_id')
                 ->nullable()
                 ->constrained('carreras');
+
+            $table->foreignId('institucion_id')
+                ->nullable()
+                ->constrained('instituciones');
 
             $table->enum('rol', ['admin', 'practicante']);
 

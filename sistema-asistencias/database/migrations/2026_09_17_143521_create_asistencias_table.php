@@ -14,6 +14,9 @@ return new class extends Migration
             $table->foreignId('usuario_id')
                 ->constrained('usuarios');
 
+            $table->foreignId('carrera_id')
+                ->constrained('carreras');
+
             $table->date('fecha');
 
             $table->dateTime('hora_entrada')
