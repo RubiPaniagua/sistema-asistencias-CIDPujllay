@@ -21,9 +21,11 @@ class UsuarioSeeder extends Seeder
         )->first();
 
         Usuario::create([
-            'codigo' => 'ADMIN001',
-            'nombre' => 'Administrador del Sistema',
-            'carrera_id' => null,
+            'codigo' => 'ADM001',
+            'dni' => '00000001',
+            'nombre' => 'Admin General',
+            'institucion' => 'SENATI',
+            'carrera_id' => 1,
             'rol' => 'admin',
             'modalidad' => null,
             'activo' => true,
@@ -32,9 +34,11 @@ class UsuarioSeeder extends Seeder
         ]);
 
         Usuario::create([
-            'codigo' => 'PRES001',
+            'codigo' => 'P202601',
+            'dni' => '74829103',
             'nombre' => 'Juan Pérez',
-            'carrera_id' => $software->id,
+            'institucion' => 'SENATI',
+            'carrera_id' => 1,
             'rol' => 'practicante',
             'modalidad' => 'presencial',
             'activo' => true,
@@ -43,9 +47,11 @@ class UsuarioSeeder extends Seeder
         ]);
 
         Usuario::create([
-            'codigo' => 'REM001',
-            'nombre' => 'María López',
-            'carrera_id' => $sistemas->id,
+            'codigo' => 'R202602',
+            'dni' => '83920192',
+            'nombre' => 'Maria Lopez',
+            'institucion' => 'UNSA',
+            'carrera_id' => 2,
             'rol' => 'practicante',
             'modalidad' => 'remoto',
             'activo' => true,

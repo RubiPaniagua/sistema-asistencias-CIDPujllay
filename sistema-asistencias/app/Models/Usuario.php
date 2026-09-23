@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Carrera; // <-- ¡ESTA LÍNEA ES LA QUE FALTA!
 
 class Usuario extends Authenticatable
 {
@@ -15,7 +16,9 @@ class Usuario extends Authenticatable
 
     protected $fillable = [
         'codigo',
+        'dni',
         'nombre',
+        'institucion',
         'carrera_id',
         'rol',
         'modalidad',
@@ -38,15 +41,15 @@ class Usuario extends Authenticatable
         ];
     }
 
-    // Relaciones
+    // Relación con el modelo Carrera
     public function carrera()
     {
-        return $this->belongsTo(Carrera::class);
+        return $this->belongsTo(Carrera::class, 'carrera_id');
     }
 
     public function asistencias()
     {
-        return $this->hasMany(Asistencia::class);
+        return $this->hasMany(Asistencia::class, 'usuario_id');
     }
 
     public function sesionesGeneradas()

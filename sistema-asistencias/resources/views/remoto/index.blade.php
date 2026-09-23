@@ -3,77 +3,87 @@
 @section('title', 'Asistencia Remota - CID PUJLLAY')
 
 @section('content')
-<div class="max-w-xl mx-auto my-auto w-full px-4">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
+<div class="max-w-xl mx-auto w-full my-auto">
+    <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-3xl shadow-2xl overflow-hidden">
         
-        <!-- Header Elegante -->
-        <div class="bg-gradient-to-r from-[#0b2b52] via-[#0f3b70] to-[#1e508e] p-6 text-white text-center border-b border-amber-500/30">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-3 text-amber-400 font-black text-xl tracking-wider border border-white/10 shadow-inner">
-                CID
-            </div>
-            <h1 class="text-xl font-bold tracking-tight">Centro de Investigación y Desarrollo</h1>
-            <p class="text-xs text-amber-300/90 font-medium mt-1">Control de Asistencia Virtual • Practicantes</p>
-        </div>
+        <!-- Header con Logo Pujllay Optimizado -->
+<div class="p-6 text-center border-b border-white/10">
+    <div class="mb-2 inline-block transition-transform hover:scale-105 duration-300">
+        <!-- Logo más grande (h-24 en móviles, h-28 en pantallas normales) -->
+        <img src="{{ asset('images/logo-pujllay.png') }}" 
+             alt="Logo CID Pujllay" 
+             class="h-24 sm:h-28 w-auto mx-auto object-contain drop-shadow-lg">
+    </div>
+    
+    <h1 class="text-xl font-extrabold text-white tracking-tight mt-1">
+        Centro de Investigación y Desarrollo
+    </h1>
+    <p class="text-xs text-amber-300 font-bold tracking-wide mt-0.5">
+        Control de Asistencia Virtual • Practicantes
+    </p>
+</div>
 
-        <div class="p-6 sm:p-8">
+        <div class="p-6 sm:p-8 space-y-5">
             <!-- Selección de Institución -->
-            <div class="mb-5">
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Institución / Convenio <span class="text-rose-500">*</span>
+            <div>
+                <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-2">
+                    Institución / Convenio <span class="text-rose-400">*</span>
                 </label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <button type="button" onclick="seleccionarInst('SENATI')" id="r-btn-senati" class="btn-inst-r py-2.5 px-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                    <button type="button" onclick="seleccionarInst('SENATI')" id="r-btn-senati" class="btn-inst-r py-2.5 px-2 bg-slate-900/60 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 transition-all">
                         SENATI
                     </button>
-                    <button type="button" onclick="seleccionarInst('UNSA')" id="r-btn-unsa" class="btn-inst-r py-2.5 px-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                    <button type="button" onclick="seleccionarInst('UNSA')" id="r-btn-unsa" class="btn-inst-r py-2.5 px-2 bg-slate-900/60 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 transition-all">
                         UNSA
                     </button>
-                    <button type="button" onclick="seleccionarInst('CIMAC')" id="r-btn-cimac" class="btn-inst-r py-2.5 px-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                    <button type="button" onclick="seleccionarInst('CIMAC')" id="r-btn-cimac" class="btn-inst-r py-2.5 px-2 bg-slate-900/60 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 transition-all">
                         CIMAC
                     </button>
-                    <button type="button" onclick="seleccionarInst('OTRO')" id="r-btn-otro" class="btn-inst-r py-2.5 px-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                    <button type="button" onclick="seleccionarInst('OTRO')" id="r-btn-otro" class="btn-inst-r py-2.5 px-2 bg-slate-900/60 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 transition-all">
                         OTRO
                     </button>
                 </div>
             </div>
 
-            <div id="alerta-remoto" class="hidden mb-5 p-4 rounded-xl text-center font-medium text-sm transition-all duration-300"></div>
+            <!-- Alerta Dinámica -->
+            <div id="alerta-remoto" class="hidden p-4 rounded-2xl text-center font-medium text-xs backdrop-blur-sm transition-all duration-300"></div>
 
             <form id="form-remoto" onsubmit="event.preventDefault(); registrarRemoto();" class="space-y-4">
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">DNI / Documento <span class="text-rose-500">*</span></label>
-                        <input type="text" id="r_dni" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 focus:ring-2 focus:ring-[#0f3b70] focus:bg-white text-sm font-semibold outline-none transition text-slate-800" placeholder="Ej. 74829103" required>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">DNI / Documento <span class="text-rose-400">*</span></label>
+                        <input type="text" id="r_dni" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-semibold" placeholder="Ej. 74829103" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Código Sesión Virtual <span class="text-rose-500">*</span></label>
-                        <input type="text" id="r_codigo_sesion" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 focus:ring-2 focus:ring-[#0f3b70] focus:bg-white text-sm font-semibold outline-none transition uppercase tracking-widest text-slate-800" placeholder="EJ. ABC123" required>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Código Sesión Virtual <span class="text-rose-400">*</span></label>
+                        <input type="text" id="r_codigo_sesion" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-semibold uppercase tracking-widest" placeholder="EJ. ABC123" required>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nombres y Apellidos <span class="text-rose-500">*</span></label>
-                        <input type="text" id="r_nombres" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 focus:ring-2 focus:ring-[#0f3b70] focus:bg-white text-sm font-semibold outline-none transition text-slate-800" placeholder="Ej. Juan Perez Garcia" required>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Nombres y Apellidos <span class="text-rose-400">*</span></label>
+                        <input type="text" id="r_nombres" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-semibold" placeholder="Ej. Juan Perez Garcia" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Fecha Actual (Servidor)</label>
-                        <input type="text" id="r_fecha_mostrar" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-200/70 border border-slate-300 text-sm font-bold text-slate-600 cursor-not-allowed text-center outline-none" readonly>
+                        <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Fecha Actual (Servidor)</label>
+                        <input type="text" id="r_fecha_mostrar" class="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-slate-300 cursor-not-allowed text-center outline-none font-bold" readonly>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Especialidad / Carrera <span class="text-rose-500">*</span></label>
-                    <input type="text" id="r_especialidad" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 focus:ring-2 focus:ring-[#0f3b70] focus:bg-white text-sm font-semibold outline-none transition text-slate-800" placeholder="Ej. Ingeniería de Software / Educación" required>
+                    <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Especialidad / Carrera <span class="text-rose-400">*</span></label>
+                    <input type="text" id="r_especialidad" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-semibold" placeholder="Ej. Ingeniería de Software / Educación" required>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Actividad Desarrollada <span class="text-rose-500">*</span></label>
-                    <textarea id="r_actividad" rows="2" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 focus:ring-2 focus:ring-[#0f3b70] focus:bg-white text-sm outline-none transition text-slate-800" placeholder="Escribe los avances logrados durante el día..." required></textarea>
+                    <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Actividad Desarrollada <span class="text-rose-400">*</span></label>
+                    <textarea id="r_actividad" rows="2" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all resize-none" placeholder="Escribe los avances logrados durante el día..." required></textarea>
                 </div>
 
-                <button type="submit" id="btn-marcar-r" class="w-full py-3.5 bg-[#0f3b70] hover:bg-[#0c2e58] text-white font-bold rounded-xl shadow-md transition duration-200 text-sm flex justify-center items-center gap-2 mt-2">
+                <!-- Botón de Registro en tono Mostaza/Ámbar -->
+                <button type="submit" id="btn-marcar-r" class="w-full py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl shadow-lg transition duration-200 text-xs uppercase tracking-wider flex justify-center items-center gap-2 mt-2 active:scale-[0.98]">
                     <span>📲 Registrar Asistencia Virtual</span>
                 </button>
             </form>
@@ -93,9 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function seleccionarInst(inst) {
     instRemoto = inst;
-    document.querySelectorAll('.btn-inst-r').forEach(b => b.className = 'btn-inst-r py-2.5 px-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition');
+    document.querySelectorAll('.btn-inst-r').forEach(b => b.className = 'btn-inst-r py-2.5 px-2 bg-slate-900/60 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 transition-all');
     const btn = document.getElementById(`r-btn-${inst.toLowerCase()}`);
-    if(btn) btn.className = 'btn-inst-r py-2.5 px-2 border border-[#0f3b70] bg-[#0f3b70] text-white rounded-xl text-xs font-bold transition shadow-sm';
+    if(btn) btn.className = 'btn-inst-r py-2.5 px-2 bg-amber-400 border border-amber-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-sm';
 }
 
 async function registrarRemoto() {
@@ -141,7 +151,7 @@ async function registrarRemoto() {
 function mostrarAlerta(msg, tipo) {
     const box = document.getElementById('alerta-remoto');
     box.innerHTML = msg;
-    box.className = `mb-5 p-4 rounded-xl text-center font-medium text-sm border ${tipo === 'exito' ? 'bg-emerald-100 text-emerald-800 border-emerald-400' : 'bg-rose-100 text-rose-800 border-rose-400'}`;
+    box.className = `p-4 rounded-2xl text-center font-medium text-xs backdrop-blur-sm border ${tipo === 'exito' ? 'bg-amber-400/20 text-amber-200 border-amber-400/50' : 'bg-red-500/20 text-red-200 border-red-500/50'}`;
 }
 </script>
 @endpush
