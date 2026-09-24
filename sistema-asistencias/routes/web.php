@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\JustificacionController;
-use App\Http\Controllers\Api\AsistenciaController;
+//YA NO SE USA
+/*use App\Http\Controllers\Api\AsistenciaController;*/
 
 // Página de inicio
 Route::get('/', function () {
@@ -10,10 +12,12 @@ Route::get('/', function () {
 })->name('welcome');
 
 // --- Rutas de API / Asistencia ---
-Route::get('/api/practicante/buscar', [AsistenciaController::class, 'buscarPorDni']);
+// TODO ESTO QUEDO COMENTADO, ESAS RUTAS SON DE ENDPOINTS DE API Y YA ESTA VIVIENDO EN ROUTES API.PHP
+/*Route::get('/api/practicante/buscar', [AsistenciaController::class, 'buscarPorDni']);
 Route::post('/api/asistencia/entrada', [AsistenciaController::class, 'marcarEntrada']);
 Route::post('/api/asistencia/salida', [AsistenciaController::class, 'marcarEntrada']); // Ajustar al controlador de salida cuando esté implementado
 Route::post('/api/asistencia/remoto', [AsistenciaController::class, 'marcarRemoto']);
+*/
 
 // Ruta de Asistencia Remota
 Route::get('/remoto', function () {

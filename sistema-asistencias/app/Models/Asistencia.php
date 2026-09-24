@@ -18,6 +18,7 @@ class Asistencia extends Model
         'modalidad',
         'estado',
         'justificacion',
+        'actividad'
     ];
 
     protected function casts(): array

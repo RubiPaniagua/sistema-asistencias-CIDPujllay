@@ -12,8 +12,8 @@ use Carbon\Carbon;
 class AsistenciaController extends Controller
 {
     /**
-     * Buscar practicante por DNI / Código para autocompletar en el formulario.
-     */
+    * Buscar practicante por DNI para autocompletar en el formulario.
+    */
     public function buscarPorDni(Request $request)
     {
         $dni = $request->query('dni');
@@ -22,20 +22,18 @@ class AsistenciaController extends Controller
             return response()->json(['encontrado' => false], 400);
         }
 
-        $usuario = Usuario::with('carrera')
-            ->where(function($query) use ($dni) {
-                $query->where('codigo', $dni)
-                      ->orWhere('dni', $dni);
-            })
+        //evita la busqueda por la columna inexixtente 
+        $usuario = Usuario::with('carrera', 'institucion')
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 
         if ($usuario) {
             return response()->json([
                 'encontrado' => true,
-                'nombres' => $usuario->nombre,
+                'nombres' => $usuario->nombre_completo,
                 'especialidad' => $usuario->carrera->nombre ?? 'N/A',
-                'institucion' => $usuario->institucion ?? 'SENATI'
+                'institucion' => $usuario->institucion->nombre ?? 'N/A'
             ], 200);
         }
 
@@ -47,23 +45,22 @@ class AsistenciaController extends Controller
      */
     public function marcarEntrada(Request $request)
     {
-        $codigo = $request->input('codigo');
+        //cambioo codigo por dni 
+        $dni = $request->input('dni');
         $actividad = $request->input('actividad');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
+        //aqui tambien cambie
         $usuario = Usuario::with('carrera')
-            ->where(function($query) use ($codigo) {
-                $query->where('codigo', $codigo)
-                      ->orWhere('dni', $codigo);
-            })
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 
         if (!$usuario) {
             return response()->json([
                 'ok' => false,
-                'error' => 'Código o DNI no válido'
+                'error' => 'DNI no válido'
             ], 404);
         }
 
@@ -83,6 +80,7 @@ class AsistenciaController extends Controller
 
         Asistencia::create([
             'usuario_id' => $usuario->id,
+            'carrera_id' => $usuario->carrera_id,
             'fecha' => $hoy,
             'hora_entrada' => $ahora->toTimeString(),
             'modalidad' => 'presencial',
@@ -92,7 +90,7 @@ class AsistenciaController extends Controller
 
         return response()->json([
             'ok' => true,
-            'nombre' => $usuario->nombre,
+            'nombre' => $usuario->nombre_completo,
             'carrera' => $usuario->carrera->nombre ?? 'N/A',
             'hora' => $ahora->format('H:i:s')
         ], 200);
@@ -103,14 +101,14 @@ class AsistenciaController extends Controller
      */
     public function marcarRemoto(Request $request)
     {
-        $codigoDni = $request->input('codigo');
+        $dni = $request->input('dni');
         $codigoSesion = strtoupper(trim($request->input('codigo_sesion')));
         $actividad = $request->input('actividad');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
         // 1. Validar la sesión virtual
-        $sesion = SesionRemota::where('codigo', $codigoSesion)->first();
+        $sesion = SesionRemota::where('codigo_temporal', $codigoSesion)->first();
 
         if (!$sesion || !$sesion->esValida()) {
             return response()->json([
@@ -119,12 +117,9 @@ class AsistenciaController extends Controller
             ], 400);
         }
 
-        // 2. Buscar al usuario
+        // 2. Buscar al usuario tambien cambie esto
         $usuario = Usuario::with('carrera')
-            ->where(function($query) use ($codigoDni) {
-                $query->where('codigo', $codigoDni)
-                      ->orWhere('dni', $codigoDni);
-            })
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 
@@ -150,6 +145,7 @@ class AsistenciaController extends Controller
         // 4. Guardar asistencia remota
         Asistencia::create([
             'usuario_id' => $usuario->id,
+            'carrera_id' => $usuario->carrera_id,
             'fecha' => $hoy,
             'hora_entrada' => $ahora->toTimeString(),
             'modalidad' => 'remoto',
@@ -159,26 +155,27 @@ class AsistenciaController extends Controller
 
         return response()->json([
             'ok' => true,
-            'nombre' => $usuario->nombre,
+            'nombre' => $usuario->nombre_completo,
             'hora' => $ahora->format('H:i:s')
         ], 200);
     }
 
+    //marcar salida tambien remplace todo el codigo con dni
     public function marcarSalida(Request $request)
     {
-        $codigo = $request->input('codigo');
+        $dni = $request->input('dni');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
         // Buscar usuario activo
-        $usuario = Usuario::where('codigo', $codigo)
+        $usuario = Usuario::where('dni', $dni)
         ->where('activo', true)
             ->first();
 
         if (!$usuario) {
             return response()->json([
                 'ok' => false,
-                'error' => 'Código no válido'
+                'error' => 'dni no válido'
             ], 404);
         }
 
@@ -209,7 +206,7 @@ class AsistenciaController extends Controller
 
         return response()->json([
             'ok' => true,
-            'nombre' => $usuario->nombre,
+            'nombre' => $usuario->nombre_completo,
             'hora' => $ahora->format('H:i:s')
         ], 200);
     }

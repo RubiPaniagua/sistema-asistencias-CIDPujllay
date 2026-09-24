@@ -2,8 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Carrera;
-use App\Models\Institucion;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,26 +28,46 @@ class UsuarioFactory extends Factory
             'dni' => fake()->unique()->numerify('########'),
             'nombres' => fake()->firstName(),
             'apellidos' => fake()->lastName(),
-            'carrera_id' => Carrera::factory(),
-            'institucion_id' => Institucion::factory(),
-    
-            'rol' => fake()->randomElement([
-                'admin',
-                'practicante',
-            ]),
-    
+
+            // Se asignarán desde el seeder usando registros reales.
+            'carrera_id' => null,
+            'institucion_id' => null,
+
+            'rol' => 'practicante',
+
             'modalidad' => fake()->randomElement([
                 'presencial',
                 'remoto',
             ]),
-    
-            'activo' => fake()->boolean(),
-    
+
+            'activo' => true,
+
             'email' => fake()->unique()->safeEmail(),
-    
+
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function presencial(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'modalidad' => 'presencial',
+        ]);
+    }
+
+    public function remoto(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'modalidad' => 'remoto',
+        ]);
+    }
+
+    public function inactivo(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'activo' => false,
+        ]);
     }
 
     /**

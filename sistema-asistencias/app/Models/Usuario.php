@@ -55,4 +55,14 @@ class Usuario extends Authenticatable
     {
         return $this->hasMany(SesionRemota::class, 'generado_por');
     }
+
+    public function getNombreCompletoAttribute()
+    {
+        return trim("{$this->nombres} {$this->apellidos}");
+    }
+
+    public function institucion()
+    {
+        return $this->belongsTo(Institucion::class);
+    }
 }
