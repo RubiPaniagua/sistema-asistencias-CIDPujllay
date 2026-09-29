@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Usuario;
 use App\Models\SesionRemota;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -13,21 +12,23 @@ class SesionRemotaController extends Controller
 {
     public function generar(Request $request)
     {
-        $dniAdmin = $request->input('dni');
+        // 1. Obtiene el usuario autenticado por Sanctum
+        $admin = $request->user();
 
-        $admin = Usuario::where('dni', $dniAdmin)
-            ->where('rol', 'admin')
-            ->where('activo', true)
-            ->first();
-
-        if (!$admin) {
-            return response()->json(['ok' => false, 'error' => 'No autorizado'], 403);
+        // 2. Valida que el usuario exista, sea admin y esté activo
+        if (!$admin || $admin->rol !== 'admin' || !$admin->activo) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'No autorizado'
+            ], 403);
         }
 
+        // 3. Genera un código aleatorio único de 6 caracteres
         do {
             $codigo = strtoupper(Str::random(6));
         } while (SesionRemota::where('codigo_temporal', $codigo)->exists());
 
+        // 4. Registra la sesión remota en la base de datos
         $sesion = SesionRemota::create([
             'codigo_temporal' => $codigo,
             'generado_por' => $admin->id,
@@ -35,6 +36,7 @@ class SesionRemotaController extends Controller
             'usado' => false,
         ]);
 
+        // 5. Retorna la respuesta en formato JSON
         return response()->json([
             'ok' => true,
             'codigo_temporal' => $sesion->codigo_temporal,
