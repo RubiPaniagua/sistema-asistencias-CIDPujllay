@@ -163,17 +163,17 @@ class UsuarioController extends Controller
      */
     public function destroy(Request $request, Usuario $usuario)
     {
-        $usuario->delete();
+        $usuario->update();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'ok' => true,
-                'message' => 'Usuario eliminado correctamente'
+                'message' => 'Usuario desactivado correctamente'
             ], 200);
         }
 
         return redirect()
             ->route('admin.usuarios.index')
-            ->with('mensaje', 'Usuario eliminado');
+            ->with('mensaje', 'Usuario desactivado correctamente ');
     }
 }

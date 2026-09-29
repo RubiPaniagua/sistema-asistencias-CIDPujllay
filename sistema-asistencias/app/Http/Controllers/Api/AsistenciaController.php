@@ -75,7 +75,10 @@ class AsistenciaController extends Controller
             ], 400);
         }
 
-        $horaLimite = Carbon::createFromTimeString('08:10:00', 'America/Lima');
+        $horaLimite = Carbon::createFromTimeString(
+            config('asistencia.hora_limite_tardanza'),
+            'America/Lima'
+        );
         $estado = $ahora->greaterThan($horaLimite) ? 'tardanza' : 'a_tiempo';
 
         Asistencia::create([

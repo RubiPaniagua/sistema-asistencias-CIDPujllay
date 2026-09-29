@@ -7,13 +7,18 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+//apartado
+use Illuminate\Support\Enumerable;
+
+
+
 class AsistenciasExport implements FromCollection, WithHeadings, WithMapping
 {
     public function __construct(protected array $filtros)
     {
     }
 
-    public function collection()
+    public function collection(): Enumerable
     {
         $query = Asistencia::with([
             'usuario.carrera',

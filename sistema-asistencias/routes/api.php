@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\AsistenciaController;
 use App\Http\Controllers\Api\SesionRemotaController;
 use App\Http\Controllers\Api\ReporteController;
@@ -40,4 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reportes', [ReporteController::class, 'index']);
     Route::get('/reportes/excel', [ReporteController::class, 'excel']);
     Route::get('/reportes/pdf', [ReporteController::class, 'pdf']);
+
+    //agregado
+    // CRUD API de Usuarios
+    Route::get('/usuarios', [UsuarioController::class, 'index']);
+    Route::post('/usuarios', [UsuarioController::class, 'store']);
+    Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update']);
+    Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy']);
 });

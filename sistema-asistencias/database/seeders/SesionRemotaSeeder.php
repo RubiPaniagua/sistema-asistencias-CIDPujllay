@@ -4,17 +4,24 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\SesionRemota;
+use App\Models\Usuario;
 use Carbon\Carbon;
 
 class SesionRemotaSeeder extends Seeder
 {
     public function run(): void
     {
+        $admin = Usuario::where('rol', 'admin')->first();
+
+        if (!$admin) {
+            return;
+        }
+
         SesionRemota::create([
-            'codigo' => 'ABC123',
-            'generado_por' => 1, // ID del Admin General
-            'expira_at' => Carbon::now('America/Lima')->addHours(2), // Válido por 2 horas
-            'activo' => true,
+            'codigo_temporal' => 'ABC123',
+            'generado_por' => $admin->id,
+            'expira_en' => Carbon::now('America/Lima')->addMinutes(15),
+            'usado' => false,
         ]);
     }
 }
