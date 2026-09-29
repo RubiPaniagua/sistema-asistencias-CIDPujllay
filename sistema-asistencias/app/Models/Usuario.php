@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Carrera; // <-- ¡ESTA LÍNEA ES LA QUE FALTA!
+use App\Models\Carrera;
 
 class Usuario extends Authenticatable
 {
@@ -17,8 +17,9 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'codigo',
         'dni',
-        'nombre',
-        'institucion',
+        'nombres',
+        'apellidos',
+        'institucion_id',
         'carrera_id',
         'rol',
         'modalidad',

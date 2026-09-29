@@ -8,15 +8,25 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-b from-[#0a203d] via-[#0f3b70] to-[#07172e] text-white antialiased min-h-screen flex items-center justify-center p-4 selection:bg-amber-400 selection:text-slate-900">
+<body class="bg-gradient-to-b from-[#0a203d] via-[#0f3b70] to-[#07172e] text-white antialiased min-h-screen flex items-center justify-center p-4 selection:bg-amber-400 selection:text-slate-900 relative">
+
+    <!-- Acceso de Administrador (Esquina Superior Derecha) -->
+    <div class="absolute top-6 right-6">
+        <a href="{{ route('login') }}" class="inline-flex items-center space-x-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white text-xs font-semibold rounded-xl border border-white/15 backdrop-blur-md transition-all shadow-lg">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <span>Administración</span>
+        </a>
+    </div>
 
     <!-- Modulo Principal Integrado -->
     <div class="max-w-md w-full space-y-8 py-6">
         
         <!-- Logotipo y Membrete Central -->
         <div class="text-center space-y-3">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 shadow-xl">
-                <span class="text-amber-400 font-black text-2xl tracking-wider">CID</span>
+            <div class="inline-flex items-center justify-center w-32 h-32 bg-white rounded-full border-4 border-white/20 shadow-2xl overflow-hidden p-1.5 mx-auto">
+                <img src="{{ asset('images/LogoCidPujllay.png') }}" alt="CID Pujllay Logo" class="w-full h-full object-cover rounded-full">
             </div>
             <div>
                 <h1 class="text-2xl font-black tracking-tight text-white drop-shadow-sm">Centro de Investigación y Desarrollo</h1>
@@ -34,7 +44,7 @@
         @php
             $ipEmpresa = in_array(request()->ip(), ['192.168.1.100', '127.0.0.1']);
             $esAdmin = Auth::check() && Auth::user()->is_admin;
-            $puedeMarcarPresencial = $esAdmin && $ipEmpresa;
+            $puedeMarcarPresencial = $esAdmin || $ipEmpresa;
         @endphp
 
         <!-- Opciones Principales de Asistencia -->
@@ -51,7 +61,10 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-sm font-bold text-white">Asistencia Presencial</h2>
+                            <div class="flex items-center space-x-2">
+                                <h2 class="text-sm font-bold text-white">Asistencia Presencial</h2>
+                                <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-semibold">Red Autorizada</span>
+                            </div>
                             <p class="text-[11px] text-blue-200">Módulo central para marcado en oficina</p>
                         </div>
                     </div>

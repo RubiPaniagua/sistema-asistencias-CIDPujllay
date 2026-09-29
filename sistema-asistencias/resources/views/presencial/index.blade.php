@@ -52,7 +52,7 @@
                     <div>
                         <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">DNI / Documento <span class="text-rose-400">*</span></label>
                         <div class="relative">
-                            <input type="text" id="p_dni" oninput="buscarUsuarioDNI()" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-semibold" placeholder="Ej. ADM001 o 74829103" autocomplete="off" required>
+                            <input type="text" id="p_dni" oninput="buscarUsuarioDNI()" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all font-semibold" placeholder="Ej. 74827384" autocomplete="off" required>
                             <span id="loader-dni" class="hidden absolute right-3 top-2.5 text-amber-300 text-xs animate-spin">🔄</span>
                         </div>
                     </div>
@@ -91,7 +91,7 @@
                     <label id="lbl-actividad" class="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">
                         Actividades a Desarrollar <span class="text-rose-400">*</span>
                     </label>
-                    <textarea id="p_actividad" rows="2" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all resize-none" placeholder="Describe los avances o tareas planificadas para hoy..." required></textarea>
+                    <textarea id="p_actividad" rows="2" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all resize-none" placeholder="Describe los avances o tareas planificadas para hoy..."></textarea>
                 </div>
 
                 <!-- Botones de Acción -->
@@ -130,7 +130,6 @@ function buscarUsuarioDNI() {
     clearTimeout(timerBusqueda);
     const dni = document.getElementById('p_dni').value.trim();
 
-    // Permite búsquedas desde 3 caracteres para cubrir ADM001, P202601 o DNIs
     if (dni.length < 3) {
         document.getElementById('card-verificacion').classList.add('hidden');
         return;
@@ -144,8 +143,10 @@ function buscarUsuarioDNI() {
             const data = await res.json();
             document.getElementById('loader-dni').classList.add('hidden');
 
+            const alertaBox = document.getElementById('alerta-presencial');
+            if(alertaBox) alertaBox.classList.add('hidden');
+
             if (res.ok && data.encontrado) {
-                // Rellenar inputs automáticamente
                 document.getElementById('p_nombres').value = data.nombres || '';
                 document.getElementById('p_especialidad').value = data.especialidad || '';
                 
@@ -153,7 +154,6 @@ function buscarUsuarioDNI() {
                     seleccionarInst(data.institucion);
                 }
 
-                // Mostrar tarjeta de verificación
                 document.getElementById('txt-confirm-nombre').innerText = data.nombres || '';
                 document.getElementById('txt-confirm-carrera').innerText = data.especialidad || '';
                 document.getElementById('card-verificacion').classList.remove('hidden');
@@ -172,6 +172,7 @@ function limpiarDni() {
     document.getElementById('p_nombres').value = '';
     document.getElementById('p_especialidad').value = '';
     document.getElementById('card-verificacion').classList.add('hidden');
+    document.getElementById('alerta-presencial').classList.add('hidden');
     document.getElementById('p_dni').focus();
 }
 
@@ -181,10 +182,23 @@ async function procesarPresencial(tipo) {
     const especialidad = document.getElementById('p_especialidad').value.trim();
     const actividad = document.getElementById('p_actividad').value.trim();
 
+    if (!dni) return mostrarAlerta('Ingresa tu DNI / Documento', 'error');
     if (!instPresencial) return mostrarAlerta('Selecciona tu Institución / Convenio', 'error');
-    if (!dni || !nombres || !especialidad || !actividad) return mostrarAlerta('Completa todos los campos obligatorios', 'error');
+    
+    if (tipo === 'entrada' && !actividad) {
+        return mostrarAlerta('Describe las actividades a desarrollar para la entrada', 'error');
+    }
 
     try {
+        // Estructura de contrato adaptada (dni: dni)
+        const bodyData = {
+            dni: dni,
+            institucion: instPresencial,
+            nombres: nombres,
+            especialidad: especialidad,
+            actividad: actividad
+        };
+
         const res = await fetch(`/api/asistencia/${tipo}`, {
             method: 'POST',
             headers: { 
@@ -192,23 +206,18 @@ async function procesarPresencial(tipo) {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({
-                codigo: dni,
-                institucion: instPresencial,
-                nombres: nombres,
-                especialidad: especialidad,
-                actividad: actividad
-            })
+            body: JSON.stringify(bodyData)
         });
 
         const data = await res.json();
         if (res.ok && data.ok) {
-            mostrarAlerta(`¡${tipo.toUpperCase()} REGISTRADA CON ÉXITO!<br><strong>${data.nombre || nombres}</strong>`, 'exito');
+            mostrarAlerta(`¡${tipo.toUpperCase()} REGISTRADA CON ÉXITO!<br><strong>${data.nombre || nombres}</strong> (${data.hora})`, 'exito');
             resetearPresencial();
         } else {
             mostrarAlerta(data.error || 'Error al procesar el registro', 'error');
         }
     } catch (e) {
+        console.error(e);
         mostrarAlerta('Error de conexión con el servidor', 'error');
     }
 }
@@ -216,6 +225,8 @@ async function procesarPresencial(tipo) {
 function resetearPresencial() {
     document.getElementById('form-presencial').reset();
     document.getElementById('card-verificacion').classList.add('hidden');
+    instPresencial = '';
+    document.querySelectorAll('.btn-inst-p').forEach(b => b.className = 'btn-inst-p py-2.5 px-2 bg-slate-900/60 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 transition-all');
     const hoy = new Date();
     document.getElementById('p_fecha_mostrar').value = hoy.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -223,7 +234,7 @@ function resetearPresencial() {
 function mostrarAlerta(msg, tipo) {
     const box = document.getElementById('alerta-presencial');
     box.innerHTML = msg;
-    box.className = `p-4 rounded-2xl text-center font-medium text-xs backdrop-blur-sm border ${tipo === 'exito' ? 'bg-amber-400/20 text-amber-200 border-amber-400/50' : 'bg-red-500/20 text-red-200 border-red-500/50'}`;
+    box.className = `p-4 rounded-2xl text-center font-medium text-xs backdrop-blur-sm border ${tipo === 'exito' ? 'bg-amber-400/20 text-amber-200 border-amber-400/50' : 'bg-rose-500/20 text-rose-200 border-rose-500/50'}`;
     box.classList.remove('hidden');
 }
 </script>
