@@ -29,8 +29,8 @@ class SesionRemota extends Model
      */
     public function esValida(): bool
     {
-        return !$this->usado 
-            && Carbon::now('America/Lima')->lessThanOrEqualTo($this->expira_en);
+        return Carbon::now('America/Lima')
+            ->lessThanOrEqualTo($this->expira_en);
     }
 
     public function creador()

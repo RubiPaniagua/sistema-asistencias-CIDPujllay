@@ -110,6 +110,15 @@ class AsistenciaController extends Controller
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
+        $horaLimite = Carbon::createFromTimeString(
+            config('asistencia.hora_limite_tardanza'),
+            'America/Lima'
+        );
+        
+        $estado = $ahora->lessThanOrEqualTo($horaLimite)
+            ? 'a_tiempo'
+            : 'tardanza';
+
         // 1. Validar la sesión virtual
         $sesion = SesionRemota::where('codigo_temporal', $codigoSesion)->first();
 
@@ -153,7 +162,7 @@ class AsistenciaController extends Controller
             'hora_entrada' => $ahora->toTimeString(),
             'modalidad' => 'remoto',
             'actividad' => $actividad,
-            'estado' => 'a_tiempo',
+            'estado' => '$estado',
         ]);
 
         return response()->json([
