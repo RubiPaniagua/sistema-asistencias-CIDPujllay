@@ -8,21 +8,39 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('asistencias', function (Blueprint $table) {
+        Schema::create('usuarios', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
-            $table->date('fecha');
-            $table->time('hora_entrada')->nullable();
-            $table->time('hora_salida')->nullable();
-            $table->string('modalidad')->default('presencial');
-            $table->text('actividad')->nullable();
-            $table->string('estado')->default('a_tiempo');
+
+            $table->string('dni')->unique();
+            $table->string('nombres');
+            $table->string('apellidos');
+
+            $table->foreignId('carrera_id')
+                ->nullable()
+                ->constrained('carreras');
+
+            $table->foreignId('institucion_id')
+                ->nullable()
+                ->constrained('instituciones');
+
+            $table->enum('rol', ['admin', 'practicante']);
+
+            $table->enum('modalidad', ['presencial', 'remoto'])
+                ->nullable();
+
+            $table->boolean('activo')->default(true);
+
+            $table->string('email')->nullable()->unique();
+            $table->string('password')->nullable();
+
+            $table->rememberToken();
+
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('asistencias');
+        Schema::dropIfExists('usuarios');
     }
 };

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Models\SesionRemota;
+use App\Models\Asistencia;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -22,30 +23,18 @@ class AsistenciaController extends Controller
             return response()->json(['encontrado' => false], 400);
         }
 
-        $usuario = Usuario::with('carrera')
-            ->where(function($query) use ($dni) {
-                $query->where('codigo', $dni)
-                      ->orWhere('dni', $dni);
-            })
+        // Usando la estructura de relaciones que definió tu compañero
+        $usuario = Usuario::with('carrera', 'institucion')
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 
         if ($usuario) {
-            $nombreCompleto = trim($usuario->nombres . ' ' . $usuario->apellidos);
-
-            $nombreInstitucion = 'SENATI';
-            if ($usuario->institucion_id) {
-                $inst = DB::table('instituciones')->where('id', $usuario->institucion_id)->first();
-                if ($inst) {
-                    $nombreInstitucion = strtoupper($inst->nombre);
-                }
-            }
-
             return response()->json([
                 'encontrado' => true,
-                'nombres' => $nombreCompleto,
+                'nombres' => $usuario->nombre_completo,
                 'especialidad' => $usuario->carrera->nombre ?? 'N/A',
-                'institucion' => $nombreInstitucion
+                'institucion' => $usuario->institucion->nombre ?? 'N/A'
             ], 200);
         }
 
@@ -57,7 +46,7 @@ class AsistenciaController extends Controller
      */
     public function marcarEntrada(Request $request)
     {
-        $dni = $request->input('dni') ?? $request->input('codigo'); // Soporte temporal por compatibilidad
+        $dni = $request->input('dni');
         $actividad = $request->input('actividad');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
@@ -67,21 +56,17 @@ class AsistenciaController extends Controller
         }
 
         $usuario = Usuario::with('carrera')
-            ->where(function($query) use ($dni) {
-                $query->where('codigo', $dni)
-                      ->orWhere('dni', $dni);
-            })
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 
         if (!$usuario) {
             return response()->json([
                 'ok' => false,
-                'error' => 'DNI no válido en el sistema'
+                'error' => 'DNI no válido'
             ], 404);
         }
 
-        // Verificamos si ya existe asistencia hoy
         $existeEntrada = DB::table('asistencias')
             ->where('usuario_id', $usuario->id)
             ->where('fecha', $hoy)
@@ -109,22 +94,20 @@ class AsistenciaController extends Controller
             'updated_at' => $ahora,
         ]);
 
-        $nombreCompleto = trim($usuario->nombres . ' ' . $usuario->apellidos);
-
         return response()->json([
             'ok' => true,
-            'nombre' => $nombreCompleto,
+            'nombre' => $usuario->nombre_completo,
             'carrera' => $usuario->carrera->nombre ?? 'N/A',
             'hora' => $ahora->format('H:i:s')
         ], 200);
     }
 
     /**
-     * Marcar salida presencial.
+     * Marcar salida presencial / general.
      */
     public function marcarSalida(Request $request)
     {
-        $dni = $request->input('dni') ?? $request->input('codigo');
+        $dni = $request->input('dni');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
@@ -132,53 +115,43 @@ class AsistenciaController extends Controller
             return response()->json(['ok' => false, 'error' => 'El DNI es requerido'], 400);
         }
 
-        $usuario = Usuario::with('carrera')
-            ->where(function($query) use ($dni) {
-                $query->where('codigo', $dni)
-                      ->orWhere('dni', $dni);
-            })
+        $usuario = Usuario::where('dni', $dni)
             ->where('activo', true)
             ->first();
 
         if (!$usuario) {
             return response()->json([
                 'ok' => false,
-                'error' => 'DNI no válido en el sistema'
+                'error' => 'DNI no válido'
             ], 404);
         }
 
-        // Buscamos el registro de asistencia de hoy para actualizar su salida
-        $asistencia = DB::table('asistencias')
-            ->where('usuario_id', $usuario->id)
+        $asistencia = Asistencia::where('usuario_id', $usuario->id)
             ->where('fecha', $hoy)
             ->first();
 
         if (!$asistencia) {
             return response()->json([
                 'ok' => false,
-                'error' => 'No se encontró un registro de entrada para el día de hoy.'
+                'error' => 'No se encuentra un registro de entrada para el día de hoy'
             ], 400);
         }
 
-        if (!empty($asistencia->hora_salida)) {
+        if ($asistencia->hora_salida !== null) {
             return response()->json([
                 'ok' => false,
-                'error' => 'Ya se registró la salida para el día de hoy.'
+                'error' => 'Ya se registró la salida para el día de hoy'
             ], 400);
         }
 
-        DB::table('asistencias')
-            ->where('id', $asistencia->id)
-            ->update([
-                'hora_salida' => $ahora->toDateTimeString(),
-                'updated_at' => $ahora,
-            ]);
-
-        $nombreCompleto = trim($usuario->nombres . ' ' . $usuario->apellidos);
+        $asistencia->update([
+            'hora_salida' => $ahora->toTimeString(),
+            'updated_at' => $ahora
+        ]);
 
         return response()->json([
             'ok' => true,
-            'nombre' => $nombreCompleto,
+            'nombre' => $usuario->nombre_completo,
             'hora' => $ahora->format('H:i:s')
         ], 200);
     }
@@ -188,13 +161,13 @@ class AsistenciaController extends Controller
      */
     public function marcarRemoto(Request $request)
     {
-        $dni = $request->input('dni') ?? $request->input('codigo');
+        $dni = $request->input('dni');
         $codigoSesion = strtoupper(trim($request->input('codigo_sesion')));
         $actividad = $request->input('actividad');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
-        $sesion = SesionRemota::where('codigo', $codigoSesion)->first();
+        $sesion = SesionRemota::where('codigo_temporal', $codigoSesion)->first();
 
         if (!$sesion || !$sesion->esValida()) {
             return response()->json([
@@ -204,10 +177,7 @@ class AsistenciaController extends Controller
         }
 
         $usuario = Usuario::with('carrera')
-            ->where(function($query) use ($dni) {
-                $query->where('codigo', $dni)
-                      ->orWhere('dni', $dni);
-            })
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 
@@ -242,11 +212,9 @@ class AsistenciaController extends Controller
             'updated_at' => $ahora,
         ]);
 
-        $nombreCompleto = trim($usuario->nombres . ' ' . $usuario->apellidos);
-
         return response()->json([
             'ok' => true,
-            'nombre' => $nombreCompleto,
+            'nombre' => $usuario->nombre_completo,
             'hora' => $ahora->format('H:i:s')
         ], 200);
     }

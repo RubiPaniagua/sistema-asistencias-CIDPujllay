@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AsistenciaController;
+use App\Http\Controllers\Api\SesionRemotaController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UsuarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +27,9 @@ Route::post('/asistencia/salida', [AsistenciaController::class, 'marcarSalida'])
 
 // Ruta de asistencia remota
 Route::post('/asistencia/remoto', [AsistenciaController::class, 'marcarRemoto']);
+
+// Ruta de inicio de sesión de administradores
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

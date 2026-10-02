@@ -13,15 +13,15 @@ class SesionRemota extends Model
     protected $table = 'sesion_remotas';
 
     protected $fillable = [
-        'codigo',
+        'codigo_temporal', //temp
         'generado_por',
-        'expira_at',
-        'activo',
+        'expira_en', //en
+        'usado',
     ];
 
     protected $casts = [
-        'expira_at' => 'datetime',
-        'activo' => 'boolean',
+        'expira_en' => 'datetime', //en
+        'usado' => 'boolean',
     ];
 
     /**
@@ -29,7 +29,8 @@ class SesionRemota extends Model
      */
     public function esValida(): bool
     {
-        return $this->activo && Carbon::now('America/Lima')->lessThanOrEqualTo($this->expira_at);
+        return $this->usado 
+            && Carbon::now('America/Lima')->lessThanOrEqualTo($this->expira_en);
     }
 
     public function creador()

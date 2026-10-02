@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Carrera;
+use App\Models\Institucion;
 
 class Usuario extends Authenticatable
 {
@@ -15,17 +16,16 @@ class Usuario extends Authenticatable
     protected $table = 'usuarios';
 
     protected $fillable = [
-        'codigo',
         'dni',
         'nombres',
         'apellidos',
-        'institucion_id',
         'carrera_id',
+        'institucion_id',
         'rol',
         'modalidad',
         'activo',
-        'password',
         'email',
+        'password',
     ];
 
     protected $hidden = [
@@ -55,5 +55,15 @@ class Usuario extends Authenticatable
     public function sesionesGeneradas()
     {
         return $this->hasMany(SesionRemota::class, 'generado_por');
+    }
+
+    public function getNombreCompletoAttribute()
+    {
+        return trim("{$this->nombres} {$this->apellidos}");
+    }
+
+    public function institucion()
+    {
+        return $this->belongsTo(Institucion::class);
     }
 }

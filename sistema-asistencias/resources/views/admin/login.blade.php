@@ -17,8 +17,8 @@
             <input 
                 type="email" 
                 id="email" 
-                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-4 focus:ring-indigo-200 focus:border-indigo-600 outline-none transition" 
-                placeholder="admin@cidpujllay.org" 
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:ring-4 focus:ring-indigo-200 focus:border-indigo-600 outline-none transition" 
+                placeholder="admin@sistema.com" 
                 required
             >
         </div>
@@ -28,7 +28,7 @@
             <input 
                 type="password" 
                 id="password" 
-                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-4 focus:ring-indigo-200 focus:border-indigo-600 outline-none transition" 
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:ring-4 focus:ring-indigo-200 focus:border-indigo-600 outline-none transition" 
                 placeholder="••••••••" 
                 required
             >
