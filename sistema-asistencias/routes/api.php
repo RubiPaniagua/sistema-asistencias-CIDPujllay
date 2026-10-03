@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AsistenciaController;
 use App\Http\Controllers\Api\SesionRemotaController;
 use App\Http\Controllers\Api\ReporteController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\JustificacionController;
 
 // -------------------------
 // RUTAS PÚBLICAS
@@ -28,14 +29,18 @@ Route::post('/asistencia/remoto', [AsistenciaController::class, 'marcarRemoto'])
 // -------------------------
 // RUTAS PROTEGIDAS (Sanctum)
 // -------------------------
-Route::middleware('auth:sanctum')->group(function () {
-
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    
     // Usuario autenticado / Cierre de sesión
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Generar código de sesión remota
     Route::post('/sesion-remota', [SesionRemotaController::class, 'generar']);
+    
+    //Funcion de asitencias justificaciones
+    Route::get('/usuarios/{usuario}/asistencias', [UsuarioController::class, 'asistencias']);
+    Route::get('/justificaciones', [JustificacionController::class, 'index']);
 
     // Módulo de Reportes
     Route::get('/reportes', [ReporteController::class, 'index']);

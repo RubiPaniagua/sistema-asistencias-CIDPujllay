@@ -162,7 +162,7 @@ class AsistenciaController extends Controller
             'hora_entrada' => $ahora->toTimeString(),
             'modalidad' => 'remoto',
             'actividad' => $actividad,
-            'estado' => '$estado',
+            'estado' => $estado,
         ]);
 
         return response()->json([
