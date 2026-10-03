@@ -33,8 +33,8 @@ class UsuarioController extends Controller
 
             'modalidad' => 'nullable|in:presencial,remoto',
 
-            'email' => 'nullable|email|unique:usuarios,email',
-            'password' => 'nullable|string|min:6',
+            'email' => 'required_if:rol,admin|nullable|email|unique:usuarios,email',
+            'password' => 'required_if:rol,admin|nullable|string|min:6',
         ]);
 
         $usuario = Usuario::create([
@@ -56,7 +56,7 @@ class UsuarioController extends Controller
             'email' => $request->email,
 
             'password' => $request->rol === 'admin'
-                ? Hash::make($request->password ?? 'password')
+                ? Hash::make($request->password)
                 : null,
         ]);
 
@@ -76,28 +76,46 @@ class UsuarioController extends Controller
                 'digits:8',
                 Rule::unique('usuarios', 'dni')->ignore($usuario->id),
             ],
-
+    
             'nombres' => 'sometimes|required|string',
             'apellidos' => 'sometimes|required|string',
-
+    
             'rol' => 'sometimes|required|in:admin,practicante',
-
+    
             'carrera_id' => 'nullable|exists:carreras,id',
             'institucion_id' => 'nullable|exists:instituciones,id',
-
+    
             'modalidad' => 'nullable|in:presencial,remoto',
-
+    
             'email' => [
                 'nullable',
                 'email',
                 Rule::unique('usuarios', 'email')->ignore($usuario->id),
             ],
-
+    
             'activo' => 'sometimes|boolean',
-
+    
             'password' => 'nullable|string|min:6',
         ]);
-
+    
+        // Si se quiere convertir a admin,
+        // debe tener email y contraseña.
+        if ($request->rol === 'admin') {
+    
+            $emailDisponible =
+                $request->filled('email') || !empty($usuario->email);
+    
+            $passwordDisponible =
+                $request->filled('password') || !empty($usuario->password);
+    
+            if (!$emailDisponible || !$passwordDisponible) {
+                return response()->json([
+                    'ok' => false,
+                    'error' => 'Para convertir un usuario en admin debe tener email y contraseña.'
+                ], 422);
+            }
+        }
+    
         $datos = $request->only([
             'dni',
             'nombres',
@@ -109,7 +127,7 @@ class UsuarioController extends Controller
             'email',
             'activo',
         ]);
-
+    
         // Si el usuario pasa a ser admin, no necesita modalidad
         if (
             isset($datos['rol']) &&
@@ -117,51 +135,19 @@ class UsuarioController extends Controller
         ) {
             $datos['modalidad'] = null;
         }
-
+    
         // La contraseña solo cambia si se envía una nueva
         if ($request->filled('password')) {
             $datos['password'] = Hash::make($request->password);
         }
-
+    
         $usuario->update($datos);
-
+    
         $usuario->load(['carrera', 'institucion']);
-
-        return response()->json([
-            'ok' => true,
-            'usuario' => $usuario
-        ], 200);
-    }
-
-
-    public function asistencias(Usuario $usuario)
-    {
-        $asistencias = $usuario->asistencias()
-            ->orderBy('fecha', 'desc')
-            ->orderBy('hora_entrada', 'desc')
-            ->get();
     
         return response()->json([
             'ok' => true,
-            'usuario' => [
-                'id' => $usuario->id,
-                'dni' => $usuario->dni,
-                'nombre' => $usuario->nombre_completo,
-            ],
-            'data' => $asistencias
-        ], 200);
-    }
-
-    public function destroy(Usuario $usuario)
-    {
-        // Baja lógica: conserva historial y relaciones
-        $usuario->update([
-            'activo' => false
-        ]);
-
-        return response()->json([
-            'ok' => true,
-            'message' => 'Usuario desactivado correctamente'
+            'usuario' => $usuario
         ], 200);
     }
 }

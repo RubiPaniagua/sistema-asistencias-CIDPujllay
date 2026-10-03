@@ -22,7 +22,9 @@ class AsistenciasExport implements FromCollection, WithHeadings, WithMapping
     {
         $query = Asistencia::with([
             'usuario.carrera',
-            'usuario.institucion'
+            'usuario.institucion',
+            'justificaciones'
+
         ]);
 
         if (!empty($this->filtros['desde'])) {
@@ -74,7 +76,7 @@ class AsistenciasExport implements FromCollection, WithHeadings, WithMapping
             $asistencia->modalidad,
             $asistencia->estado,
             $asistencia->actividad,
-            $asistencia->justificacion,
+            $asistencia->justificaciones->pluck('motivo')->join(' | ') ?: '-',
         ];
     }
 }

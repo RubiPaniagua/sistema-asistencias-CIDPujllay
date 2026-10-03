@@ -30,13 +30,15 @@ class JustificacionController extends Controller
             'evidencia' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        // Buscar usuario por DNI
-        $usuario = Usuario::where('dni', $request->identificacion)->first();
+        // Buscar usuario activo por DNI
+        $usuario = Usuario::where('dni', $request->identificacion)
+            ->where('activo', true)
+            ->first();
 
         if (!$usuario) {
             return redirect()->back()
                 ->withErrors([
-                    'identificacion' => 'No se encontró un usuario con ese DNI.'
+                    'identificacion' => 'No se encontró un usuario activo con ese DNI.'
                 ])
                 ->withInput();
         }
@@ -47,13 +49,35 @@ class JustificacionController extends Controller
             ->first();
 
         /*
-         * Si es tardanza, obligatoriamente debe existir
-         * una asistencia registrada.
+         * Para justificar una tardanza:
+         * - debe existir una asistencia
+         * - esa asistencia debe tener estado "tardanza"
          */
-        if ($request->tipo === 'tardanza' && !$asistencia) {
+        if (
+            $request->tipo === 'tardanza' &&
+            (!$asistencia || $asistencia->estado !== 'tardanza')
+        ) {
             return redirect()->back()
                 ->withErrors([
-                    'fecha' => 'No se encontró una asistencia para justificar la tardanza.'
+                    'fecha' => 'No existe una tardanza registrada para esa fecha.'
+                ])
+                ->withInput();
+        }
+
+        /*
+         * Evitar que el mismo usuario registre
+         * dos justificaciones del mismo tipo
+         * para la misma fecha.
+         */
+        $yaExiste = Justificacion::where('usuario_id', $usuario->id)
+            ->whereDate('fecha', $request->fecha)
+            ->where('tipo', $request->tipo)
+            ->exists();
+
+        if ($yaExiste) {
+            return redirect()->back()
+                ->withErrors([
+                    'fecha' => 'Ya existe una justificación de este tipo para esa fecha.'
                 ])
                 ->withInput();
         }

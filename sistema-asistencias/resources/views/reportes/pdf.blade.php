@@ -89,7 +89,7 @@
                     </td>
 
                     <td>
-                        {{ $a->justificacion ?? '-' }}
+                        {{ $a->justificaciones->pluck('motivo')->join(' | ') ?: '-' }}
                     </td>
                 </tr>
             @endforeach

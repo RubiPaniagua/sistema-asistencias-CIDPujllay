@@ -233,7 +233,7 @@ Sin body obligatorio.
 }
 ```
 
-### Comportamiento actual
+### Comportamiento actual del backend
 
 - El código tiene una fecha/hora de expiración.
 - El mismo código puede ser utilizado por varios practicantes mientras siga vigente.
@@ -672,7 +672,340 @@ o:
 - 🟡 Pruebas finales de integración frontend ↔ backend.
 - 🟡 Limpieza de archivos y código de prueba antes de entrega.
 
+-----------
+-----------
+-----------
+
+## ultimo estado de backend
+
+## 1. Rutas públicas
+
+### Login
+**POST** `/api/login`
+
+Uso: autenticar administrador y obtener token Bearer.
+
+### Buscar practicante por DNI
+**GET** `/api/practicante/buscar`
+
+Uso: consultar practicante activo antes del marcado.
+
+### Marcar entrada presencial
+**POST** `/api/asistencia/entrada`
+
+Validaciones principales:
+- DNI obligatorio y de 8 dígitos.
+- Actividad opcional.
+- Usuario debe existir y estar activo.
+- No se permite duplicar asistencia del mismo usuario en la misma fecha.
+
+### Marcar salida
+**POST** `/api/asistencia/salida`
+
+Validaciones principales:
+- DNI obligatorio y de 8 dígitos.
+- Busca la asistencia del día y registra salida.
+
+### Marcar asistencia remota
+**POST** `/api/asistencia/remoto`
+
+Campos principales:
+- `dni`
+- `codigo_sesion`
+- `actividad` opcional
+
+Validaciones principales:
+- DNI obligatorio y de 8 dígitos.
+- Código de sesión obligatorio.
+- Sesión remota debe existir y no estar vencida.
+- Un mismo código puede ser utilizado por varios practicantes mientras siga vigente.
+- No se permite duplicar asistencia del mismo usuario en la misma fecha.
+
+> Importante para frontend: la ruta oficial es `/api/asistencia/remoto`, no `/api/asistencia/remota`.
+
 ---
+
+## 2. Rutas autenticadas
+
+Estas rutas requieren `auth:sanctum`.
+
+### Usuario autenticado
+**GET** `/api/me`
+
+Uso: validar token y obtener información del usuario autenticado.
+
+### Logout
+**POST** `/api/logout`
+
+Uso: revocar el token actual.
+
+---
+
+## 3. Rutas exclusivas de administrador
+
+Todas las rutas de esta sección requieren:
+- `auth:sanctum`
+- `AdminMiddleware`
+
+### Sesión remota
+**POST** `/api/sesion-remota`
+
+Comportamiento:
+- Genera código temporal de 6 caracteres.
+- Vigencia: 15 minutos.
+- Si ya existe una sesión vigente, reutiliza el mismo código.
+- El código no se consume con el primer uso.
+
+---
+
+## 4. Usuarios
+
+### Listar
+**GET** `/api/usuarios`
+
+### Crear
+**POST** `/api/usuarios`
+
+Reglas importantes:
+- DNI único.
+- Rol: `admin` o `practicante`.
+- Si el rol es `admin`, email y contraseña son obligatorios.
+- Modalidad del admin queda en `null`.
+- Contraseña se guarda hasheada.
+
+### Actualizar
+**PUT** `/api/usuarios/{usuario}`
+
+Regla importante:
+- No se puede convertir un practicante en admin sin que disponga de email y contraseña.
+
+### Desactivar
+**DELETE** `/api/usuarios/{usuario}`
+
+Comportamiento:
+- Baja lógica.
+- Establece `activo = false`.
+
+### Historial de asistencias
+**GET** `/api/usuarios/{usuario}/asistencias`
+
+---
+
+## 5. Carreras
+
+### Listar
+**GET** `/api/carreras`
+
+### Crear
+**POST** `/api/carreras`
+
+### Mostrar
+**GET** `/api/carreras/{carrera}`
+
+### Actualizar
+**PUT** `/api/carreras/{carrera}`
+
+### Eliminar
+**DELETE** `/api/carreras/{carrera}`
+
+Regla:
+- Si la carrera tiene usuarios asociados, responde `409 Conflict`.
+- Si no tiene usuarios asociados, puede eliminarse normalmente.
+
+---
+
+## 6. Instituciones
+
+### Listar
+**GET** `/api/instituciones`
+
+### Crear
+**POST** `/api/instituciones`
+
+### Mostrar
+**GET** `/api/instituciones/{institucion}`
+
+### Actualizar
+**PUT** `/api/instituciones/{institucion}`
+
+### Eliminar
+**DELETE** `/api/instituciones/{institucion}`
+
+Regla:
+- Si la institución tiene usuarios asociados, responde `409 Conflict`.
+- Si no tiene usuarios asociados, puede eliminarse normalmente.
+
+---
+
+## 7. Justificaciones
+
+### Envío desde formulario web
+**POST** `/justificaciones`
+
+No es endpoint API. Usa formulario Blade y protección CSRF.
+
+Campos:
+- `identificacion`
+- `tipo`: `tardanza` o `inasistencia`
+- `fecha`
+- `motivo`
+- `evidencia` opcional
+
+Reglas:
+- El usuario debe existir y estar activo.
+- Si el tipo es `tardanza`, debe existir una asistencia de esa fecha y su estado debe ser `tardanza`.
+- Se evita duplicar una justificación del mismo tipo para el mismo usuario y fecha.
+- Una inasistencia puede justificarse aunque no exista asistencia.
+- Evidencia permitida: JPG, JPEG, PNG o PDF.
+- Tamaño máximo: 5 MB.
+
+Almacenamiento:
+- Disco: `public`
+- Carpeta: `storage/app/public/evidencias`
+- URL pública esperada: `/storage/evidencias/...`
+
+### Listar para administrador
+**GET** `/api/justificaciones`
+
+Incluye relaciones:
+- usuario
+- carrera
+- institución
+- asistencia
+
+---
+
+## 8. Reportes
+
+### JSON
+**GET** `/api/reportes`
+
+### Excel
+**GET** `/api/reportes/excel`
+
+### PDF
+**GET** `/api/reportes/pdf`
+
+Filtros soportados:
+- `desde`
+- `hasta`
+- `modalidad`
+- `estado`
+
+La información de justificaciones se obtiene desde la relación:
+
+`$asistencia->justificaciones`
+
+La tabla `justificaciones` es la fuente actual de esta información.
+
+---
+
+## 9. Modelos principales
+
+### Usuario
+Relaciones:
+- `carrera()`
+- `institucion()`
+- `asistencias()`
+- `justificaciones()`
+- `sesionesGeneradas()`
+
+### Asistencia
+Relaciones:
+- `usuario()`
+- `justificaciones()`
+
+### Justificacion
+Relaciones:
+- `usuario()`
+- `asistencia()`
+
+### Carrera
+Relación:
+- `usuarios()`
+
+### Institucion
+Relación:
+- `usuarios()`
+
+### SesionRemota
+Relación:
+- `creador()`
+
+---
+
+## 10. Campos antiguos conservados
+
+Por compatibilidad e historial se decidió no eliminar por ahora:
+- `asistencias.justificacion`
+- `asistencias.evidencia_path`
+- `sesion_remotas.usado`
+
+Estos campos no forman parte de la lógica principal actual.
+
+La fuente real de justificaciones es la tabla `justificaciones`.
+
+---
+
+## 11. Pendiente de integración frontend
+
+Las APIs administrativas ya están protegidas correctamente.
+
+Las vistas Blade:
+- `/admin/dashboard`
+- `/admin/reportes`
+- `/admin/usuarios`
+- `/admin/usuarios/crear`
+- `/admin/usuarios/{usuario}/editar`
+
+todavía pueden cargar HTML directamente.
+
+Cuando se integre el frontend definitivo, cada vista administrativa debe:
+1. Obtener el token desde `localStorage`.
+2. Consultar `GET /api/me` con `Authorization: Bearer <token>`.
+3. Si recibe `401` o `403`, redirigir a `/admin/login`.
+4. Mostrar el contenido administrativo únicamente después de validar el token.
+
+Este punto queda pendiente hasta integrar la rama frontend.
+
+---
+
+## 12. Pruebas realizadas
+
+Se verificó:
+- Login administrativo.
+- Protección `auth:sanctum`.
+- Protección `AdminMiddleware`.
+- Acceso no-admin devuelve `403`.
+- Acceso sin token devuelve `401`.
+- CRUD de carreras.
+- CRUD de instituciones.
+- Eliminación de carrera/institución asociada devuelve `409`.
+- Creación de admin sin email/password devuelve `422`.
+- Conversión a admin sin credenciales devuelve `422`.
+- Validaciones de asistencia devuelven `422` cuando corresponde.
+- Sesión remota reutilizable durante su vigencia.
+- Justificación de tardanza rechazada si la asistencia fue `a_tiempo`.
+- Detección de justificación duplicada.
+- Almacenamiento público de evidencias.
+- Reportes con relación `justificaciones`.
+
+---
+
+## 13. Estado para cierre backend
+
+Backend funcional y revisado.
+
+Pendiente:
+- Gestión administrativa más completa de justificaciones/evidencias hecho parcial
+- Código remoto automático en pantalla pública
+- Integración con frontend actualizado.
+- Validación visual de vistas `/admin/*` usando `/api/me`.
+- Revisión final después del merge frontend/backend.
+- Commit y push final de la rama backend.
+
+
+
 
 # 10. Regla de mantenimiento del contrato
 

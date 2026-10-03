@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Carrera; // <-- ¡ESTA LÍNEA ES LA QUE FALTA!
+// use App\Models\Carrera; // <-- ¡ESTA LÍNEA ES LA QUE FALTA! no hacia falta porque ya está importada en la parte superior del archivo
 
 class Usuario extends Authenticatable
 {
@@ -64,5 +64,10 @@ class Usuario extends Authenticatable
     public function institucion()
     {
         return $this->belongsTo(Institucion::class);
+    }
+
+    public function justificaciones()
+    {
+        return $this->hasMany(Justificacion::class);
     }
 }

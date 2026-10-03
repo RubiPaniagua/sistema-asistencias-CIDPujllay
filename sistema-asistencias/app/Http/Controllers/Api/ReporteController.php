@@ -15,7 +15,8 @@ class ReporteController extends Controller
     {
         $query = Asistencia::with([
             'usuario.carrera',
-            'usuario.institucion'
+            'usuario.institucion',
+            'justificaciones'
         ]);
 
         if ($request->desde) {
@@ -59,7 +60,8 @@ class ReporteController extends Controller
     {
         $query = Asistencia::with([
             'usuario.carrera',
-            'usuario.institucion'
+            'usuario.institucion',
+            'justificaciones'
         ]);
 
         if ($request->desde) {

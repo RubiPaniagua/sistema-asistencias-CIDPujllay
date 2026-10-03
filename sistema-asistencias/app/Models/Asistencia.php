@@ -17,8 +17,6 @@ class Asistencia extends Model
         'hora_salida',
         'modalidad',
         'estado',
-        'justificacion',
-        'Evidencia_path',
         'actividad'
     ];
 
@@ -34,5 +32,10 @@ class Asistencia extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class);
+    }
+
+    public function justificaciones()
+    {
+        return $this->hasMany(Justificacion::class);
     }
 }
