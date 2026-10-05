@@ -2,26 +2,38 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class SesionRemota extends Model
 {
+    use HasFactory;
+
+    protected $table = 'sesion_remotas';
+
     protected $fillable = [
-        'codigo_temporal',
+        'codigo_temporal', //temp
         'generado_por',
-        'expira_en',
+        'expira_en', //en
         'usado',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'expira_en' => 'datetime', //en
+        'usado' => 'boolean',
+    ];
+
+    /**
+     * Verifica si la sesión virtual sigue activa y vigente según el tiempo actual.
+     */
+    public function esValida(): bool
     {
-        return [
-            'expira_en' => 'datetime',
-            'usado' => 'boolean',
-        ];
+        return $this->usado 
+            && Carbon::now('America/Lima')->lessThanOrEqualTo($this->expira_en);
     }
 
-    public function generador()
+    public function creador()
     {
         return $this->belongsTo(Usuario::class, 'generado_por');
     }

@@ -2,16 +2,23 @@
 
 namespace Database\Seeders;
 
+use App\Models\Carrera;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class CarreraSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('carreras')->insert([
-            ['id' => 1, 'nombre' => 'Ing. Software'],
-            ['id' => 2, 'nombre' => 'Sistemas'],
-        ]);
+        foreach ([
+            'Ingeniería de Software con Inteligencia Artificial',
+            'Ingeniería de Sistemas',
+            'Ingeniería Industrial',
+            'Administración de Empresas',
+            'Diseño Gráfico',
+        ] as $nombre) {
+            Carrera::firstOrCreate([
+                'nombre' => $nombre
+            ]);
+        }
     }
 }

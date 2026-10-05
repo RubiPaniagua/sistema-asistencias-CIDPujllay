@@ -6,15 +6,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Carrera;
+use App\Models\Institucion;
 
 class Usuario extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $table = 'usuarios';
+
     protected $fillable = [
         'dni',
-        'nombre',
+        'nombres',
+        'apellidos',
         'carrera_id',
+        'institucion_id',
         'rol',
         'modalidad',
         'activo',
@@ -35,19 +41,29 @@ class Usuario extends Authenticatable
         ];
     }
 
-    // Relaciones
+    // Relación con el modelo Carrera
     public function carrera()
     {
-        return $this->belongsTo(Carrera::class);
+        return $this->belongsTo(Carrera::class, 'carrera_id');
     }
 
     public function asistencias()
     {
-        return $this->hasMany(Asistencia::class);
+        return $this->hasMany(Asistencia::class, 'usuario_id');
     }
 
     public function sesionesGeneradas()
     {
         return $this->hasMany(SesionRemota::class, 'generado_por');
+    }
+
+    public function getNombreCompletoAttribute()
+    {
+        return trim("{$this->nombres} {$this->apellidos}");
+    }
+
+    public function institucion()
+    {
+        return $this->belongsTo(Institucion::class);
     }
 }

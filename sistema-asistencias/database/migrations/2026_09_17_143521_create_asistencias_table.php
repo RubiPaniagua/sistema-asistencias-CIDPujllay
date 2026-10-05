@@ -6,31 +6,39 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('asistencias', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('usuario_id')->constrained('usuarios')->restrictOnDelete();
+
+            $table->foreignId('usuario_id')
+                ->constrained('usuarios');
+
+            $table->foreignId('carrera_id')
+                ->constrained('carreras');
+
             $table->date('fecha');
-            $table->time('hora_entrada');
-            $table->time('hora_salida')->nullable();
+
+            $table->dateTime('hora_entrada')
+                ->nullable();
+
+            $table->dateTime('hora_salida')
+                ->nullable();
+
             $table->enum('modalidad', ['presencial', 'remoto']);
-            $table->enum('estado', ['a_tiempo', 'tardanza', 'falta'])->default('a_tiempo');
-            $table->text('justificacion')->nullable();
+
+            $table->enum('estado', ['a_tiempo', 'tardanza'])
+                ->nullable();
+
+            $table->text('justificacion')
+                ->nullable();
+
             $table->timestamps();
 
-            // Una sola asistencia por persona y día (respaldo de la regla 4 del controlador)
             $table->unique(['usuario_id', 'fecha']);
-            $table->index('fecha');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('asistencias');
