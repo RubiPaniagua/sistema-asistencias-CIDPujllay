@@ -2,44 +2,84 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Carrera;
+use App\Models\Institucion;
 use App\Models\Usuario;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UsuarioSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin
-        Usuario::create([
-            'dni' => '10000001',
-            'nombre' => 'Admin General',
-            'carrera_id' => 1,
-            'rol' => 'admin',
-            'modalidad' => null,
-            'activo' => true,
-            'email' => 'admin@test.com',
-            'password' => Hash::make('password123'),
-        ]);
+        $senati = Institucion::where('nombre', 'SENATI')->first();
+        $software = Carrera::where(
+            'nombre',
+            'Ingeniería de Software con Inteligencia Artificial'
+        )->first();
 
-        // Practicante Presencial
-        Usuario::create([
-            'dni' => '72000001',
-            'nombre' => 'Juan Pérez',
-            'carrera_id' => 1,
-            'rol' => 'practicante',
-            'modalidad' => 'presencial',
-            'activo' => true,
-        ]);
+        // Admin fijo
+        Usuario::firstOrCreate(
+            ['dni' => '00000001'],
+            [
+                'nombres' => 'Admin',
+                'apellidos' => 'General',
+                'institucion_id' => $senati->id,
+                'carrera_id' => $software->id,
+                'rol' => 'admin',
+                'modalidad' => null,
+                'activo' => true,
+                'email' => 'admin@sistema.com',
+                'password' => Hash::make('password'),
+            ]
+        );
 
-        // Practicante Remoto
-        Usuario::create([
-            'dni' => '72000002',
-            'nombre' => 'Maria Lopez',
-            'carrera_id' => 2,
-            'rol' => 'practicante',
-            'modalidad' => 'remoto',
-            'activo' => true,
-        ]);
+        // Usuario fijo para tus pruebas
+        Usuario::firstOrCreate(
+            ['dni' => '74827384'],
+            [
+                'nombres' => 'Jorge',
+                'apellidos' => 'Quenta Oliva',
+                'institucion_id' => $senati->id,
+                'carrera_id' => $software->id,
+                'rol' => 'practicante',
+                'modalidad' => 'presencial',
+                'activo' => true,
+            ]
+        );
+
+        $instituciones = Institucion::all();
+        $carreras = Carrera::all();
+
+        // 10 presenciales
+        Usuario::factory(10)
+            ->presencial()
+            ->state(fn () => [
+                'institucion_id' => $instituciones->random()->id,
+                'carrera_id' => $carreras->random()->id,
+                'rol' => 'practicante',
+            ])
+            ->create();
+
+        // 9 remotos activos
+        Usuario::factory(9)
+            ->remoto()
+            ->state(fn () => [
+                'institucion_id' => $instituciones->random()->id,
+                'carrera_id' => $carreras->random()->id,
+                'rol' => 'practicante',
+            ])
+            ->create();
+
+        // 1 remoto inactivo
+        Usuario::factory(1)
+            ->remoto()
+            ->inactivo()
+            ->state(fn () => [
+                'institucion_id' => $instituciones->random()->id,
+                'carrera_id' => $carreras->random()->id,
+                'rol' => 'practicante',
+            ])
+            ->create();
     }
 }
