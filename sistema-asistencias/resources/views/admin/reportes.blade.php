@@ -301,6 +301,24 @@ async function cargarReportes() {
                     ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">A tiempo</span>'
                     : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Tardanza</span>';
 
+                // Limpieza de formato para mostrar solo la fecha y las horas limpias (sin marcas ISO enteras ni microsegundos)
+                const fechaLimpia = item.fecha ? item.fecha.split('T')[0] : '-';
+                
+                const formatearHora = (valorHora) => {
+                    if (!valorHora) return '-';
+                    // Si viene en formato ISO (ej. 2026-10-02T15:36:41.000000Z), extraemos la parte de la hora
+                    if (valorHora.includes('T')) {
+                        let horaParte = valorHora.split('T')[1];
+                        if (horaParte) {
+                            return horaParte.replace('Z', '').split('.')[0]; // Remueve 'Z' y los microsegundos si existen
+                        }
+                    }
+                    return valorHora; // Si ya es solo la hora
+                };
+
+                const entradaLimpia = formatearHora(item.hora_entrada);
+                const salidaLimpia = formatearHora(item.hora_salida);
+
                 tr.innerHTML = `
                     <td class="py-4 px-6 font-medium text-white flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-300 font-bold flex items-center justify-center border border-indigo-500/30 text-xs">
@@ -309,9 +327,9 @@ async function cargarReportes() {
                         ${item.usuario}
                     </td>
                     <td class="py-4 px-6 text-slate-400">${item.carrera || '-'}</td>
-                    <td class="py-4 px-6">${item.fecha}</td>
-                    <td class="py-4 px-6 font-mono text-xs text-emerald-400">${item.hora_entrada || '-'}</td>
-                    <td class="py-4 px-6 font-mono text-xs text-amber-400">${item.hora_salida || '-'}</td>
+                    <td class="py-4 px-6">${fechaLimpia}</td>
+                    <td class="py-4 px-6 font-mono text-xs text-emerald-400">${entradaLimpia}</td>
+                    <td class="py-4 px-6 font-mono text-xs text-amber-400">${salidaLimpia}</td>
                     <td class="py-4 px-6">${badgeModalidad}</td>
                     <td class="py-4 px-6">${badgeEstado}</td>
                 `;

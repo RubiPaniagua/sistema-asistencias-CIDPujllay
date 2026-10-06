@@ -37,6 +37,10 @@
             text-align: left;
             font-size: 11px;
         }
+        /* Evitar que las fechas, horas y estados se rompan en varias líneas */
+        td.no-wrap {
+            white-space: nowrap;
+        }
         th {
             background-color: #f1f5f9;
             color: #1e293b;
@@ -74,14 +78,31 @@
         </thead>
         <tbody>
             @forelse($registros as $item)
+                @php
+                    // Limpieza para extraer estrictamente la fecha (YYYY-MM-DD)
+                    $fechaLimpia = $item->fecha ? \Carbon\Carbon::parse($item->fecha)->format('Y-m-d') : '-';
+
+                    // Limpieza para extraer únicamente la hora (HH:mm:ss) sin fecha ni microsegundos
+                    $formatearSoloHora = function($valorHora) {
+                        if (!$valorHora) return 'No registrada';
+                        try {
+                            return \Carbon\Carbon::parse($valorHora)->format('H:i:s');
+                        } catch (\Exception $e) {
+                            return $valorHora;
+                        }
+                    };
+
+                    $entradaLimpia = $formatearSoloHora($item->hora_entrada);
+                    $salidaLimpia = $item->hora_salida ? $formatearSoloHora($item->hora_salida) : 'No registrada';
+                @endphp
                 <tr>
                     <td>{{ $item->usuario->nombre_completo ?? ($item->usuario->nombres ?? 'Desconocido') }}</td>
                     <td>{{ $item->usuario->carrera->nombre ?? ($item->carrera->nombre ?? '-') }}</td>
-                    <td>{{ $item->fecha }}</td>
-                    <td>{{ $item->hora_entrada }}</td>
-                    <td>{{ $item->hora_salida ?? 'No registrada' }}</td>
-                    <td>{{ ucfirst($item->modalidad) }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $item->estado)) }}</td>
+                    <td class="no-wrap">{{ $fechaLimpia }}</td>
+                    <td class="no-wrap">{{ $entradaLimpia }}</td>
+                    <td class="no-wrap">{{ $salidaLimpia }}</td>
+                    <td class="no-wrap">{{ ucfirst($item->modalidad) }}</td>
+                    <td class="no-wrap">{{ ucfirst(str_replace('_', ' ', $item->estado)) }}</td>
                 </tr>
             @empty
                 <tr>
