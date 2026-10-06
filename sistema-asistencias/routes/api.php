@@ -31,6 +31,15 @@ Route::post('/asistencia/remoto', [AsistenciaController::class, 'marcarRemoto'])
 // Ruta de inicio de sesión de administradores
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Rutas protegidas por token (Sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    // Ruta para que la monitora genere el código temporal de sesión remota
+    Route::post('/sesion-remota', [AsistenciaController::class, 'generarSesionRemota']);
+
+    // Ruta para consultar los reportes de asistencia con filtros
+    Route::get('/reportes', [AsistenciaController::class, 'reportes']);
+});

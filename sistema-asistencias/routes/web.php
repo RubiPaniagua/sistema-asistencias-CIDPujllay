@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JustificacionController;
 use App\Http\Controllers\CarreraController;
+use App\Http\Controllers\Api\AsistenciaController;
 
 // Página de inicio
 Route::get('/', function () {
@@ -64,3 +65,5 @@ Route::put('/carreras/{carrera}', [CarreraController::class, 'update'])
 Route::delete('/carreras/{carrera}', [CarreraController::class, 'destroy'])
     ->name('carreras.destroy');
 
+// Ruta para la vista PDF de reportes pasando los filtros
+Route::get('/admin/reportes/pdf', [AsistenciaController::class, 'exportarPdf']);

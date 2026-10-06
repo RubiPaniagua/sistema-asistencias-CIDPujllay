@@ -21,4 +21,3 @@ return new class extends Migration
         Schema::dropIfExists('carreras');
     }
 };
-'@ | Set-Content database\migrations\2026_09_17_143210_create_carreras_table.php

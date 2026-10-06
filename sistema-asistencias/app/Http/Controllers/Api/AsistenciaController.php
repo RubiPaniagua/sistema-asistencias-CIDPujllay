@@ -9,6 +9,7 @@ use App\Models\SesionRemota;
 use App\Models\Asistencia;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AsistenciaController extends Controller
 {
@@ -23,7 +24,6 @@ class AsistenciaController extends Controller
             return response()->json(['encontrado' => false], 400);
         }
 
-        // Usando la estructura de relaciones que definió tu compañero
         $usuario = Usuario::with('carrera', 'institucion')
             ->where('dni', $dni)
             ->where('activo', true)
@@ -217,5 +217,102 @@ class AsistenciaController extends Controller
             'nombre' => $usuario->nombre_completo,
             'hora' => $ahora->format('H:i:s')
         ], 200);
+    }
+
+    public function generarSesionRemota(Request $request)
+    {
+        $codigo = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
+        $expiraEn = now()->addMinutes(15);
+
+        return response()->json([
+            'ok' => true,
+            'codigo_temporal' => $codigo,
+            'expira_en' => $expiraEn
+        ]);
+    }
+
+    public function reportes(Request $request)
+    {
+        $query = Asistencia::with(['usuario.carrera']);
+
+        if ($request->filled('usuario')) {
+            $term = $request->usuario;
+            $query->whereHas('usuario', function($q) use ($term) {
+                $q->where('nombres', 'like', "%{$term}%")
+                  ->orWhere('apellidos', 'like', "%{$term}%")
+                  ->orWhere(DB::raw("CONCAT(nombres, ' ', apellidos)"), 'like', "%{$term}%");
+            });
+        }
+
+        if ($request->filled('tipo_filtro')) {
+            $tipo = $request->tipo_filtro;
+
+            if ($tipo === 'fecha' && $request->filled('fecha')) {
+                $query->whereDate('fecha', $request->fecha);
+            } elseif ($tipo === 'semana') {
+                $query->whereBetween('fecha', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+            } elseif ($tipo === 'mes') {
+                $query->whereMonth('fecha', Carbon::now()->month)
+                      ->whereYear('fecha', Carbon::now()->year);
+            }
+        }
+
+        if ($request->filled('modalidad')) {
+            $query->where('modalidad', $request->modalidad);
+        }
+
+        $registros = $query->orderBy('fecha', 'desc')->get()->map(function($item) {
+            return [
+                'usuario' => $item->usuario->nombre_completo ?? ($item->usuario->nombres ?? 'Desconocido'),
+                'carrera' => $item->usuario->carrera->nombre ?? ($item->carrera->nombre ?? '-'),
+                'fecha' => $item->fecha,
+                'hora_entrada' => $item->hora_entrada,
+                'hora_salida' => $item->hora_salida,
+                'modalidad' => $item->modalidad,
+                'estado' => $item->estado,
+            ];
+        });
+
+        return response()->json([
+            'ok' => true,
+            'data' => $registros
+        ]);
+    }
+
+    public function exportarPdf(Request $request)
+    {
+        $query = Asistencia::with(['usuario', 'usuario.carrera']);
+
+        if ($request->filled('usuario')) {
+            $usuario = $request->input('usuario');
+            $query->whereHas('usuario', function($q) use ($usuario) {
+                $q->where('nombres', 'like', "%{$usuario}%")
+                  ->orWhere('apellidos', 'like', "%{$usuario}%");
+            });
+        }
+
+        if ($request->filled('tipo_filtro')) {
+            $tipo = $request->input('tipo_filtro');
+            if ($tipo === 'fecha' && $request->filled('fecha')) {
+                $query->whereDate('fecha', $request->input('fecha'));
+            } elseif ($tipo === 'semana') {
+                $query->whereBetween('fecha', [now()->startOfWeek(), now()->endOfWeek()]);
+            } elseif ($tipo === 'mes') {
+                $query->whereMonth('fecha', now()->month)
+                      ->whereYear('fecha', now()->year);
+            }
+        }
+
+        if ($request->filled('modalidad')) {
+            $query->where('modalidad', $request->input('modalidad'));
+        }
+
+        $registros = $query->get();
+
+        // Generar el archivo PDF con DomPDF
+        $pdf = Pdf::loadView('admin.pdf-reporte', compact('registros'));
+        
+        // stream() muestra el PDF directamente en el visor integrado del navegador (como tu última imagen)
+        return $pdf->stream('reporte-asistencias.pdf');
     }
 }
