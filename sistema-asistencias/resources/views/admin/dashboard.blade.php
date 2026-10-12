@@ -54,6 +54,21 @@
 const token = localStorage.getItem('auth_token');
 if (!token) {
     window.location.href = '/admin/login';
+} else {
+    // Validar token activo con el backend mediante /api/me
+    fetch('/api/me', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/admin/login';
+        }
+    }).catch(() => {});
 }
 
 async function generarCodigoRemoto() {
@@ -67,7 +82,6 @@ async function generarCodigoRemoto() {
             }
         });
 
-        // Intentar leer la respuesta como JSON
         const data = await response.json().catch(() => ({}));
 
         if (response.ok && (data.ok || data.codigo_temporal)) {
@@ -80,10 +94,8 @@ async function generarCodigoRemoto() {
                 document.getElementById('expiracion-display').innerText = 'Código generado correctamente';
             }
         } else {
-            // Muestra el error exacto que devuelva Laravel o el estado HTTP
             const errorMessage = data.message || data.error || `Error HTTP: ${response.status}`;
             alert('No se pudo generar: ' + errorMessage);
-            console.error('Detalle del error API:', data);
         }
     } catch (err) {
         console.error(err);

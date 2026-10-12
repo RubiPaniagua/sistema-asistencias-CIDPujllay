@@ -7,21 +7,20 @@
     <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-3xl shadow-2xl overflow-hidden">
         
         <!-- Header con Logo Pujllay Optimizado -->
-<div class="p-6 text-center border-b border-white/10">
-    <div class="mb-2 inline-block transition-transform hover:scale-105 duration-300">
-        <!-- Logo más grande (h-24 en móviles, h-28 en pantallas normales) -->
-        <img src="{{ asset('images/logo-pujllay.png') }}" 
-             alt="Logo CID Pujllay" 
-             class="h-24 sm:h-28 w-auto mx-auto object-contain drop-shadow-lg">
-    </div>
-    
-    <h1 class="text-xl font-extrabold text-white tracking-tight mt-1">
-        Centro de Investigación y Desarrollo
-    </h1>
-    <p class="text-xs text-amber-300 font-bold tracking-wide mt-0.5">
-        Control de Asistencia Virtual • Practicantes
-    </p>
-</div>
+        <div class="p-6 text-center border-b border-white/10">
+            <div class="mb-2 inline-block transition-transform hover:scale-105 duration-300">
+                <img src="{{ asset('images/logo-pujllay.png') }}" 
+                     alt="Logo CID Pujllay" 
+                     class="h-24 sm:h-28 w-auto mx-auto object-contain drop-shadow-lg">
+            </div>
+            
+            <h1 class="text-xl font-extrabold text-white tracking-tight mt-1">
+                Centro de Investigación y Desarrollo
+            </h1>
+            <p class="text-xs text-amber-300 font-bold tracking-wide mt-0.5">
+                Control de Asistencia Virtual • Practicantes
+            </p>
+        </div>
 
         <div class="p-6 sm:p-8 space-y-5">
             <!-- Selección de Institución -->
@@ -99,6 +98,38 @@ let instRemoto = '';
 document.addEventListener('DOMContentLoaded', () => {
     const hoy = new Date();
     document.getElementById('r_fecha_mostrar').value = hoy.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    // Autocompletar datos por DNI en tiempo real
+    const inputDni = document.getElementById('r_dni');
+    if (inputDni) {
+        inputDni.addEventListener('input', async function () {
+            const dni = this.value.trim();
+
+            if (dni.length >= 8) {
+                try {
+                    const res = await fetch(`/api/practicante/buscar?dni=${dni}`);
+                    const data = await res.json();
+
+                    if (res.ok && data.encontrado) {
+                        document.getElementById('r_nombres').value = data.nombres || '';
+                        document.getElementById('r_especialidad').value = data.especialidad || '';
+                        
+                        // Seleccionar automáticamente la institución si coincide
+                        if (data.institucion) {
+                            const instUpper = data.institucion.toUpperCase();
+                            if (['SENATI', 'UNSA', 'CIMAC'].includes(instUpper)) {
+                                seleccionarInst(instUpper);
+                            } else {
+                                seleccionarInst('OTRO');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al autocompletar practicante:', error);
+                }
+            }
+        });
+    }
 });
 
 function seleccionarInst(inst) {
@@ -138,6 +169,8 @@ async function registrarRemoto() {
         if (res.ok && data.ok) {
             mostrarAlerta(`¡REGISTRO VIRTUAL EXITOSO!<br><strong>${nombres}</strong>`, 'exito');
             document.getElementById('form-remoto').reset();
+            instRemoto = '';
+            document.querySelectorAll('.btn-inst-r').forEach(b => b.className = 'btn-inst-r py-2.5 px-2 bg-slate-900/60 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 transition-all');
             const hoy = new Date();
             document.getElementById('r_fecha_mostrar').value = hoy.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
         } else {

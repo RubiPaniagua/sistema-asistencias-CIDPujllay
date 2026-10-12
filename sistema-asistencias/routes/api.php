@@ -25,8 +25,11 @@ Route::get('/practicante/buscar', [AsistenciaController::class, 'buscarPorDni'])
 Route::post('/asistencia/entrada', [AsistenciaController::class, 'marcarEntrada']);
 Route::post('/asistencia/salida', [AsistenciaController::class, 'marcarSalida']);
 
-// Ruta de asistencia remota
-Route::post('/asistencia/remoto', [AsistenciaController::class, 'marcarRemoto']);
+// Ruta de asistencia remota (corregida a /remota para coincidir con el frontend)
+Route::post('/asistencia/remota', [AsistenciaController::class, 'marcarRemoto']);
+
+// Ruta para que el administrador genere el código temporal de sesión remota
+Route::post('/sesion-remota', [AsistenciaController::class, 'generarSesionRemota']);
 
 // Ruta de inicio de sesión de administradores
 Route::post('/login', [AuthController::class, 'login']);
@@ -37,8 +40,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    // Ruta para que la monitora genere el código temporal de sesión remota
-    Route::post('/sesion-remota', [AsistenciaController::class, 'generarSesionRemota']);
+    // Ruta para verificar el token actual (añadida para evitar redirecciones fallidas en el dashboard)
+    Route::get('/me', function (Request $request) {
+        return response()->json($request->user());
+    });
 
     // Ruta para consultar los reportes de asistencia con filtros
     Route::get('/reportes', [AsistenciaController::class, 'reportes']);

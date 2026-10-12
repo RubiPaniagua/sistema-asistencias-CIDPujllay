@@ -157,25 +157,32 @@ class AsistenciaController extends Controller
     }
 
     /**
-     * Registrar asistencia remota mediante código de sesión virtual.
+     * Registrar asistencia remota mediante código de sesión virtual (Multiusuario).
+     */
+    /**
+     * Registrar asistencia remota mediante código de sesión virtual (Máximo 3 veces al día).
      */
     public function marcarRemoto(Request $request)
     {
         $dni = $request->input('dni');
-        $codigoSesion = strtoupper(trim($request->input('codigo_sesion')));
+        $codigoSesion = strtoupper(trim($request->input('codigo_temporal')));
         $actividad = $request->input('actividad');
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
-        $sesion = SesionRemota::where('codigo_temporal', $codigoSesion)->first();
+        // 1. Validar que la sesión exista y que aún esté dentro de los 15 minutos de vigencia
+        $sesion = SesionRemota::where('codigo_temporal', $codigoSesion)
+            ->where('expira_en', '>', $ahora)
+            ->first();
 
-        if (!$sesion || !$sesion->esValida()) {
+        if (!$sesion) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Código de sesión vencido o datos incorrectos'
             ], 400);
         }
 
+        // 2. Buscar al usuario activo
         $usuario = Usuario::with('carrera')
             ->where('dni', $dni)
             ->where('activo', true)
@@ -188,18 +195,21 @@ class AsistenciaController extends Controller
             ], 404);
         }
 
-        $existe = DB::table('asistencias')
+        // 3. Contar cuántas asistencias remotas ya registró este usuario el día de hoy
+        $registrosHoy = DB::table('asistencias')
             ->where('usuario_id', $usuario->id)
             ->where('fecha', $hoy)
-            ->exists();
+            ->where('modalidad', 'remoto')
+            ->count();
 
-        if ($existe) {
+        if ($registrosHoy >= 3) {
             return response()->json([
                 'ok' => false,
-                'error' => 'Ya registraste tu asistencia el día de hoy'
+                'error' => 'Ya completaste tus 3 registros de asistencia remota del día de hoy'
             ], 400);
         }
 
+        // 4. Registrar la asistencia actual
         DB::table('asistencias')->insert([
             'usuario_id' => $usuario->id,
             'carrera_id' => $usuario->carrera_id,
@@ -222,13 +232,23 @@ class AsistenciaController extends Controller
     public function generarSesionRemota(Request $request)
     {
         $codigo = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
-        $expiraEn = now()->addMinutes(15);
+        $expiraEn = Carbon::now('America/Lima')->addMinutes(15);
+    
+        // Obtiene el ID del admin autenticado o busca el primer usuario con rol admin por seguridad
+        $adminId = optional($request->user())->id ?? optional(Usuario::where('rol', 'admin')->first())->id ?? 1;
+
+        $sesion = SesionRemota::create([
+            'codigo_temporal' => $codigo,
+            'generado_por' => $adminId,
+            'expira_en' => $expiraEn,
+            'usado' => false,
+        ]);
 
         return response()->json([
             'ok' => true,
-            'codigo_temporal' => $codigo,
-            'expira_en' => $expiraEn
-        ]);
+            'codigo_temporal' => $sesion->codigo_temporal,
+            'expira_en' => $sesion->expira_en->toIso8601String()
+        ], 200);
     }
 
     public function reportes(Request $request)
@@ -309,10 +329,8 @@ class AsistenciaController extends Controller
 
         $registros = $query->get();
 
-        // Generar el archivo PDF con DomPDF
         $pdf = Pdf::loadView('admin.pdf-reporte', compact('registros'));
         
-        // stream() muestra el PDF directamente en el visor integrado del navegador (como tu última imagen)
         return $pdf->stream('reporte-asistencias.pdf');
     }
 }
