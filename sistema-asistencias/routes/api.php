@@ -47,4 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ruta para consultar los reportes de asistencia con filtros
     Route::get('/reportes', [AsistenciaController::class, 'reportes']);
+
+    // Ruta específica para la auditoría de marcas remotas en tiempo real del dashboard
+    Route::get('/auditoria-remota', [AsistenciaController::class, 'auditoriaRemota']);
 });

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard de Administración')
+@section('title', 'Dashboard de Administración - CID PUJLLAY')
 
 @section('content')
 <div class="max-w-5xl mx-auto space-y-8 pb-12">
@@ -14,6 +14,9 @@
         <div class="flex flex-wrap items-center gap-3">
             <a href="/admin/reportes" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-xl text-sm transition shadow-sm border border-slate-600/50">
                 📊 Reportes
+            </a>
+            <a href="/admin/justificaciones" class="px-4 py-2 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-medium rounded-xl text-sm transition shadow-sm border border-amber-500/30 flex items-center gap-1.5">
+                📄 Justificaciones
             </a>
             <a href="/admin/usuarios" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-xl text-sm transition shadow-sm border border-slate-600/50">
                 👥 Usuarios
@@ -34,9 +37,19 @@
             <p class="text-indigo-200 text-sm leading-relaxed">Haz clic en generar para otorgar un código de asistencia temporal. Este vencerá automáticamente de acuerdo con la configuración de la API.</p>
         </div>
 
-        <div class="flex flex-col items-center bg-slate-900/90 p-6 rounded-2xl border border-indigo-500/40 min-w-[260px] shadow-xl z-10">
+        <div class="flex flex-col items-center bg-slate-900/90 p-6 rounded-2xl border border-indigo-500/40 min-w-[280px] shadow-xl z-10">
             <span class="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Código Activo</span>
-            <span id="codigo-remoto-display" class="text-3xl font-mono font-black tracking-widest text-emerald-400 my-2">------</span>
+            
+            <!-- Código Display + Botón Copiar al Lado -->
+            <div class="flex items-center justify-center gap-2 my-2 w-full">
+                <span id="codigo-remoto-display" class="text-3xl font-mono font-black tracking-widest text-emerald-400">------</span>
+                <button id="btn-copiar" onclick="copiarCodigoRemoto()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 border border-slate-700 rounded-xl transition-all active:scale-95 flex items-center justify-center" title="Copiar código">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012-2m0 10h2m0 0h2m-2 0v2m0-2v-2"></path>
+                    </svg>
+                </button>
+            </div>
+
             <span id="expiracion-display" class="text-xs text-indigo-300 mb-4 text-center">Sin sesión activa actualmente</span>
             <button 
                 onclick="generarCodigoRemoto()" 
@@ -45,17 +58,48 @@
             </button>
         </div>
     </div>
+
+    <!-- Panel de Verificación de Auditoría Remota (Las 3 Marcas del Día) -->
+    <div class="bg-slate-800/80 border border-slate-700/60 rounded-3xl shadow-xl overflow-hidden backdrop-blur-md p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-700/60 pb-4">
+            <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    🔍 Auditoría de Marcas Remotas de Hoy
+                </h3>
+                <p class="text-slate-400 text-xs">Control interno de las hasta 3 verificaciones realizadas por los practicantes remotos el día de hoy.</p>
+            </div>
+            <button onclick="cargarAuditoriaRemota()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 self-start">
+                🔄 Actualizar
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-700/60 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                        <th class="py-3 px-4">Practicante</th>
+                        <th class="py-3 px-4">Carrera</th>
+                        <th class="py-3 px-4 text-center">Verificaciones Hoy</th>
+                        <th class="py-3 px-4">Detalle de Horas Registradas</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-auditoria-remota" class="divide-y divide-slate-700/40 text-sm text-slate-300">
+                    <tr>
+                        <td colspan="4" class="py-6 text-center text-slate-500">Cargando registros remotos de hoy...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-// Verificar autenticación
 const token = localStorage.getItem('auth_token');
 if (!token) {
     window.location.href = '/admin/login';
 } else {
-    // Validar token activo con el backend mediante /api/me
     fetch('/api/me', {
         method: 'GET',
         headers: {
@@ -85,7 +129,8 @@ async function generarCodigoRemoto() {
         const data = await response.json().catch(() => ({}));
 
         if (response.ok && (data.ok || data.codigo_temporal)) {
-            document.getElementById('codigo-remoto-display').innerText = data.codigo_temporal || data.codigo;
+            const codigo = data.codigo_temporal || data.codigo;
+            document.getElementById('codigo-remoto-display').innerText = codigo;
             const expiraTime = data.expira_en || data.expires_at;
             if (expiraTime) {
                 const expira = new Date(expiraTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -103,9 +148,79 @@ async function generarCodigoRemoto() {
     }
 }
 
+function copiarCodigoRemoto() {
+    const codigo = document.getElementById('codigo-remoto-display').innerText.trim();
+    if (codigo === '------') return;
+
+    navigator.clipboard.writeText(codigo).then(() => {
+        const btn = document.getElementById('btn-copiar');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `<span class="text-xs font-bold text-emerald-400 px-1">¡Copiado!</span>`;
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+        }, 1500);
+    }).catch(err => {
+        console.error('Error al copiar:', err);
+    });
+}
+
+// Cargar la auditoría de marcas remotas del día actual
+async function cargarAuditoriaRemota() {
+    const tbody = document.getElementById('tabla-auditoria-remota');
+    
+    try {
+        const response = await fetch(`/api/auditoria-remota`, {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (response.ok && data.ok && data.data.length > 0) {
+            data.data.forEach(info => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/30 transition";
+
+                const totalMarcas = info.horas.length;
+                let badgeProgreso = '';
+
+                if (totalMarcas >= 3) {
+                    badgeProgreso = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">3/3 Completado</span>`;
+                } else if (totalMarcas === 2) {
+                    badgeProgreso = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">2/3 Parcial</span>`;
+                } else {
+                    badgeProgreso = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${totalMarcas}/3 Verificación</span>`;
+                }
+
+                const horasHtml = info.horas.map(h => `<span class="px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg font-mono text-xs text-emerald-300">${h}</span>`).join(' ');
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-white">${info.usuario}</td>
+                    <td class="py-3 px-4 text-slate-400 text-xs">${info.carrera}</td>
+                    <td class="py-3 px-4 text-center">${badgeProgreso}</td>
+                    <td class="py-3 px-4 flex flex-wrap gap-2 items-center">${horasHtml || '<span class="text-slate-500 italic text-xs">Sin marcas registradas aún</span>'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500 text-xs">No hay registros de asistencias remotas para el día de hoy.</td></tr>`;
+        }
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-rose-400 text-xs">Error al cargar la auditoría remota.</td></tr>`;
+    }
+}
+
 function cerrarSesion() {
     localStorage.removeItem('auth_token');
     window.location.href = '/admin/login';
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarAuditoriaRemota();
+});
 </script>
 @endpush

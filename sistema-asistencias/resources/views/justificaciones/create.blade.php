@@ -1,140 +1,160 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Justificativa de Faltas e Atrasos - CID Pujllay</title>
+@extends('layouts.app')
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gradient-to-b from-[#0a203d] via-[#0f3b70] to-[#07172e] text-white antialiased min-h-screen flex items-center justify-center p-4 selection:bg-amber-400 selection:text-slate-900">
+@section('title', 'Formulario de Justificación - CID PUJLLAY')
 
-    <div class="max-w-lg w-full py-8 space-y-6">
-        
-        <!-- Voltar para o menu -->
-        <div>
-            <a href="{{ route('welcome') }}" class="inline-flex items-center space-x-2 text-xs font-semibold text-blue-200 hover:text-white transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                <span>Voltar ao Menu Principal</span>
-            </a>
-        </div>
-
-        <!-- Cabeçalho do Formulário -->
-        <div class="text-center space-y-2">
-            <div class="inline-flex items-center justify-center w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 shadow-xl mb-1">
-                <svg class="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-            </div>
-            <h1 class="text-2xl font-black text-white tracking-tight">Formulário de Justificativa</h1>
-            <p class="text-xs text-blue-200">Envie suas informações para análise de ausência ou atraso</p>
-        </div>
-
-        <!-- Mensagens de Sucesso ou Erro -->
-        @if(session('success'))
-            <div class="bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 p-4 rounded-2xl text-xs backdrop-blur-sm text-center font-medium">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-2xl text-xs backdrop-blur-sm text-center font-medium">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        <!-- Card/Formulário Integrado -->
-        <form action="{{ route('justificaciones.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/10 backdrop-blur-md border border-white/15 rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl">
-            @csrf
-
-            <!-- 1. Identificação / ID ou DNI -->
-            <div class="space-y-1.5">
-                <label for="identificacion" class="block text-xs font-bold text-amber-300">
-                    ID ou DNI do Praticante <span class="text-red-400">*</span>
-                </label>
-                <div class="relative">
-                    <input type="text" id="identificacion" name="identificacion" required placeholder="Digite seu ID ou DNI" value="{{ old('identificacion') }}"
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all">
-                </div>
-                @error('identificacion')
-                    <span class="text-[10px] text-red-300">{{ $message }}</span>
-                @enderror
-            </div>
-
-            <!-- 2. Tipo de Incidência e Data -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Tipo -->
-                <div class="space-y-1.5">
-                    <label for="tipo" class="block text-xs font-bold text-amber-300">
-                        Tipo de Falta <span class="text-red-400">*</span>
-                    </label>
-                    <select id="tipo" name="tipo" required
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all">
-                        <option value="" disabled selected class="bg-slate-900">Selecione...</option>
-                        <option value="tardanza" class="bg-slate-900" {{ old('tipo') == 'tardanza' ? 'selected' : '' }}>Atraso / Tardança</option>
-                        <option value="inasistencia" class="bg-slate-900" {{ old('tipo') == 'inasistencia' ? 'selected' : '' }}>Ausência / Inexistência</option>
-                    </select>
-                    @error('tipo')
-                        <span class="text-[10px] text-red-300">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Data -->
-                <div class="space-y-1.5">
-                    <label for="fecha" class="block text-xs font-bold text-amber-300">
-                        Data da Ausência/Atraso <span class="text-red-400">*</span>
-                    </label>
-                    <input type="date" id="fecha" name="fecha" required value="{{ old('fecha', date('Y-m-d')) }}"
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all [color-scheme:dark]">
-                    @error('fecha')
-                        <span class="text-[10px] text-red-300">{{ $message }}</span>
-                    @enderror
-                </div>
-            </div>
-
-            <!-- 3. Motivo / Descrição -->
-            <div class="space-y-1.5">
-                <label for="motivo" class="block text-xs font-bold text-amber-300">
-                    Detalhe da Justificativa <span class="text-red-400">*</span>
-                </label>
-                <textarea id="motivo" name="motivo" rows="3" required placeholder="Explique brevemente o motivo..."
-                    class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all resize-none">{{ old('motivo') }}</textarea>
-                @error('motivo')
-                    <span class="text-[10px] text-red-300">{{ $message }}</span>
-                @enderror
-            </div>
-
-            <!-- 4. Anexo / Evidência (Opcional) -->
-            <div class="space-y-1.5">
-                <label for="evidencia" class="block text-xs font-bold text-amber-300">
-                    Comprovante ou Evidência <span class="text-xs font-normal text-slate-300">(Opcional)</span>
-                </label>
-                <input type="file" id="evidencia" name="evidencia" accept="image/*,.pdf"
-                    class="w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-400/20 file:text-amber-300 hover:file:bg-amber-400/30 file:transition-colors file:cursor-pointer border border-white/10 rounded-xl bg-slate-900/60 p-1">
-                <p class="text-[10px] text-slate-400">Permitido: Imagens (JPG, PNG) ou arquivos PDF (máx. 5MB)</p>
-                @error('evidencia')
-                    <span class="text-[10px] text-red-300">{{ $message }}</span>
-                @enderror
-            </div>
-
-            <!-- Botão de Envio -->
-            <div class="pt-2">
-                <button type="submit" 
-                    class="w-full py-3 px-4 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-lg hover:shadow-amber-400/20 active:scale-[0.98]">
-                    Enviar Justificativa
-                </button>
-            </div>
-
-        </form>
-
-        <div class="text-center text-[11px] text-slate-400 font-medium">
-            CID Pujllay &copy; {{ date('Y') }}
-        </div>
-
+@section('content')
+<div class="w-full max-w-xl mx-auto my-auto px-2 sm:px-4 py-3 sm:py-6 overflow-x-hidden">
+    
+    <!-- Botón Volver al menú principal -->
+    <div class="mb-3 sm:mb-5 text-center">
+        <a href="{{ route('welcome') }}" class="inline-flex items-center text-xs font-bold text-slate-300 hover:text-amber-300 transition-colors">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Volver al Menú Principal
+        </a>
     </div>
 
-</body>
-</html>
+    <!-- Contenedor Tarjeta Fija y Simétrica -->
+    <div class="bg-white/10 backdrop-blur-xl border border-white/15 rounded-3xl shadow-2xl overflow-hidden p-5 sm:p-8 space-y-4 sm:space-y-6">
+        
+        <!-- Header con Icono/Logo -->
+        <div class="text-center border-b border-white/10 pb-4">
+            <div class="inline-block p-3 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 mb-2 shadow-lg">
+                <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <h1 class="text-lg sm:text-xl font-black text-white tracking-tight">Formulario de Justificación</h1>
+            <p class="text-[11px] sm:text-xs text-amber-300 font-bold tracking-wide mt-0.5">Envía tus datos para análisis de ausencia o tardanza</p>
+        </div>
+
+        <!-- Alertas -->
+        @if(session('success'))
+        <div class="p-4 rounded-2xl text-center font-bold text-xs bg-emerald-500/25 text-emerald-200 border border-emerald-500/50 shadow-lg">
+            {{ session('success') }}
+        </div>
+        @endif
+
+        @if($errors->any())
+        <div class="p-4 rounded-2xl text-xs bg-rose-500/25 text-rose-200 border border-rose-500/50 shadow-lg space-y-1">
+            <p class="font-bold text-center">Por favor corrige los campos indicados.</p>
+        </div>
+        @endif
+
+        <!-- Formulario -->
+        <form action="{{ route('justificaciones.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            @csrf
+
+            <!-- Identificación / DNI con Autocompletado -->
+            <div>
+                <label class="block text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">ID o DNI del Practicante <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                    <input type="text" id="j_dni" name="identificacion" oninput="buscarUsuarioDNI()" maxlength="8" inputmode="numeric" class="w-full bg-slate-900/80 border border-white/15 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-bold tracking-wider" placeholder="Digita tu DNI de 8 dígitos" autocomplete="off" required value="{{ old('identificacion') }}">
+                    <span id="loader-dni" class="hidden absolute right-3 top-3.5 text-amber-300 text-xs animate-spin">🔄</span>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Confirmación de Usuario -->
+            <div id="card-verificacion" class="hidden bg-slate-900/90 border border-amber-400/40 rounded-2xl p-3 sm:p-4 transition-all shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-bold shrink-0 text-sm sm:text-base">
+                            👤
+                        </div>
+                        <div class="space-y-0.5 min-w-0">
+                            <p class="text-white font-black text-xs sm:text-sm uppercase tracking-wide truncate" id="txt-confirm-nombre">-</p>
+                            <p class="text-slate-300 text-[10px] sm:text-[11px] font-medium truncate" id="txt-confirm-carrera">-</p>
+                            <p class="text-amber-300 font-bold text-[10px] sm:text-xs uppercase tracking-wider" id="txt-confirm-institucion">-</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="limpiarDni()" class="bg-white/10 hover:bg-white/20 text-slate-200 hover:text-amber-300 border border-white/10 px-2.5 py-1 rounded-xl text-[10px] font-bold transition shrink-0 ml-2">
+                        Cambiar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tipo de Falta y Fecha en 2 columnas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Tipo de Falta <span class="text-rose-400">*</span></label>
+                    <select name="tipo" class="w-full bg-slate-900/80 border border-white/15 rounded-xl px-3 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 font-bold" required>
+                        <option value="" disabled selected>Seleccione...</option>
+                        <option value="tardanza" {{ old('tipo') == 'tardanza' ? 'selected' : '' }}>Tardanza</option>
+                        <option value="inasistencia" {{ old('tipo') == 'inasistencia' ? 'selected' : '' }}>Inasistencia</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Fecha de Ausencia / Atraso <span class="text-rose-400">*</span></label>
+                    <input type="date" name="fecha" class="w-full bg-slate-900/80 border border-white/15 rounded-xl px-3 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 font-bold text-center" required value="{{ old('fecha', date('Y-m-d')) }}">
+                </div>
+            </div>
+
+            <!-- Motivo o Detalle -->
+            <div>
+                <label class="block text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Detalle de la Justificación <span class="text-rose-400">*</span></label>
+                <textarea name="motivo" rows="3" class="w-full bg-slate-900/80 border border-white/15 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-all resize-none" placeholder="Explique brevemente el motivo..." required>{{ old('motivo') }}</textarea>
+            </div>
+
+            <!-- Evidencia o Archivo Adjunto -->
+            <div>
+                <label class="block text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Comprobante o Evidencia <span class="text-slate-400 font-normal">(Opcional)</span></label>
+                <div class="flex items-center gap-2 bg-slate-900/80 border border-white/15 rounded-xl px-3 py-2">
+                    <input type="file" name="evidencia" class="w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-400 file:text-slate-950 hover:file:bg-amber-300 cursor-pointer">
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">Permitido: Imágenes (JPG, PNG) o archivos PDF (máx. 5MB).</p>
+            </div>
+
+            <!-- Botón de Envío -->
+            <button type="submit" class="w-full py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl shadow-lg transition duration-200 text-xs uppercase tracking-wider flex justify-center items-center gap-2 mt-2 active:scale-[0.98]">
+                <span>ENVIAR JUSTIFICACIÓN</span>
+            </button>
+        </form>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+let timerBusqueda = null;
+
+function buscarUsuarioDNI() {
+    clearTimeout(timerBusqueda);
+    const dni = document.getElementById('j_dni').value.trim();
+
+    if (dni.length < 8) {
+        document.getElementById('card-verificacion').classList.add('hidden');
+        return;
+    }
+
+    document.getElementById('loader-dni').classList.remove('hidden');
+
+    timerBusqueda = setTimeout(async () => {
+        try {
+            const res = await fetch(`/api/practicante/buscar?dni=${encodeURIComponent(dni)}`);
+            const data = await res.json();
+            document.getElementById('loader-dni').classList.add('hidden');
+
+            if (res.ok && data.encontrado) {
+                document.getElementById('txt-confirm-nombre').innerText = data.nombres || '';
+                document.getElementById('txt-confirm-carrera').innerText = data.especialidad || '';
+                document.getElementById('txt-confirm-institucion').innerText = data.institucion || 'OTRO';
+                
+                document.getElementById('card-verificacion').classList.remove('hidden');
+            } else {
+                document.getElementById('card-verificacion').classList.add('hidden');
+            }
+        } catch (e) {
+            console.error(e);
+            document.getElementById('loader-dni').classList.add('hidden');
+        }
+    }, 200);
+}
+
+function limpiarDni() {
+    document.getElementById('j_dni').value = '';
+    document.getElementById('card-verificacion').classList.add('hidden');
+    document.getElementById('j_dni').focus();
+}
+</script>
+@endpush

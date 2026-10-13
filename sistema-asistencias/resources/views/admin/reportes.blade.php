@@ -252,7 +252,6 @@ function abrirPdf() {
     if (fecha) params.append('fecha', fecha);
     if (modalidad) params.append('modalidad', modalidad);
 
-    // Abre una nueva pestaña hacia la ruta de exportación PDF con los filtros actuales
     window.open(`/admin/reportes/pdf?${params.toString()}`, '_blank');
 }
 
@@ -282,8 +281,8 @@ async function cargarReportes() {
 
         if (response.ok && data.ok && data.data.length > 0) {
             const total = data.data.length;
-            const aTiempo = data.data.filter(i => i.estado === 'a_tiempo').length;
-            const tardanzas = data.data.filter(i => i.estado === 'tardanza').length;
+            const aTiempo = data.data.filter(i => i.estado.toLowerCase() === 'a_tiempo' || i.estado.toLowerCase() === 'A tiempo').length;
+            const tardanzas = data.data.filter(i => i.estado.toLowerCase() === 'tardanza').length;
 
             document.getElementById('kpi-total').innerText = total;
             document.getElementById('kpi-atiempo').innerText = aTiempo;
@@ -293,31 +292,26 @@ async function cargarReportes() {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-700/30 transition";
                 
-                const badgeModalidad = item.modalidad === 'remoto' 
+                const modalidadLower = (item.modalidad || '').toLowerCase();
+                const badgeModalidad = modalidadLower === 'remoto' 
                     ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Remoto</span>'
                     : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Presencial</span>';
 
-                const badgeEstado = item.estado === 'a_tiempo'
-                    ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">A tiempo</span>'
-                    : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Tardanza</span>';
+                // Asignación de colores y diseño según el estado recibido de la API
+                let badgeEstado = '';
+                const estadoLower = (item.estado || '').toLowerCase();
 
-                // Limpieza de formato para mostrar solo la fecha y las horas limpias (sin marcas ISO enteras ni microsegundos)
+                if (estadoLower.includes('justificado')) {
+                    badgeEstado = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">Justificado</span>';
+                } else if (estadoLower.includes('tardanza')) {
+                    badgeEstado = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Tardanza</span>';
+                } else if (estadoLower.includes('falta')) {
+                    badgeEstado = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">Falta</span>';
+                } else {
+                    badgeEstado = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">A tiempo</span>';
+                }
+
                 const fechaLimpia = item.fecha ? item.fecha.split('T')[0] : '-';
-                
-                const formatearHora = (valorHora) => {
-                    if (!valorHora) return '-';
-                    // Si viene en formato ISO (ej. 2026-10-02T15:36:41.000000Z), extraemos la parte de la hora
-                    if (valorHora.includes('T')) {
-                        let horaParte = valorHora.split('T')[1];
-                        if (horaParte) {
-                            return horaParte.replace('Z', '').split('.')[0]; // Remueve 'Z' y los microsegundos si existen
-                        }
-                    }
-                    return valorHora; // Si ya es solo la hora
-                };
-
-                const entradaLimpia = formatearHora(item.hora_entrada);
-                const salidaLimpia = formatearHora(item.hora_salida);
 
                 tr.innerHTML = `
                     <td class="py-4 px-6 font-medium text-white flex items-center gap-3">
@@ -328,8 +322,8 @@ async function cargarReportes() {
                     </td>
                     <td class="py-4 px-6 text-slate-400">${item.carrera || '-'}</td>
                     <td class="py-4 px-6">${fechaLimpia}</td>
-                    <td class="py-4 px-6 font-mono text-xs text-emerald-400">${entradaLimpia}</td>
-                    <td class="py-4 px-6 font-mono text-xs text-amber-400">${salidaLimpia}</td>
+                    <td class="py-4 px-6 font-mono text-xs text-emerald-400">${item.hora_entrada}</td>
+                    <td class="py-4 px-6 font-mono text-xs text-amber-400">${item.hora_salida}</td>
                     <td class="py-4 px-6">${badgeModalidad}</td>
                     <td class="py-4 px-6">${badgeEstado}</td>
                 `;

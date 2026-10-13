@@ -79,7 +79,8 @@ class AsistenciaController extends Controller
             ], 400);
         }
 
-        $horaLimite = Carbon::createFromTimeString('08:10:00', 'America/Lima');
+        // Tolerancia hasta las 08:30:00 AM
+        $horaLimite = Carbon::createFromTimeString('08:30:00', 'America/Lima');
         $estado = $ahora->greaterThan($horaLimite) ? 'tardanza' : 'a_tiempo';
 
         DB::table('asistencias')->insert([
@@ -157,9 +158,6 @@ class AsistenciaController extends Controller
     }
 
     /**
-     * Registrar asistencia remota mediante código de sesión virtual (Multiusuario).
-     */
-    /**
      * Registrar asistencia remota mediante código de sesión virtual (Máximo 3 veces al día).
      */
     public function marcarRemoto(Request $request)
@@ -170,7 +168,7 @@ class AsistenciaController extends Controller
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
-        // 1. Validar que la sesión exista y que aún esté dentro de los 15 minutos de vigencia
+        // 1. Validar que la sesión exista y aún esté vigente
         $sesion = SesionRemota::where('codigo_temporal', $codigoSesion)
             ->where('expira_en', '>', $ahora)
             ->first();
@@ -195,7 +193,7 @@ class AsistenciaController extends Controller
             ], 404);
         }
 
-        // 3. Contar cuántas asistencias remotas ya registró este usuario el día de hoy
+        // 3. Contar cuántas asistencias remotas ya registró este usuario el día de hoy (Límite: máximo 3)
         $registrosHoy = DB::table('asistencias')
             ->where('usuario_id', $usuario->id)
             ->where('fecha', $hoy)
@@ -209,15 +207,23 @@ class AsistenciaController extends Controller
             ], 400);
         }
 
-        // 4. Registrar la asistencia actual
+        // EVALUACIÓN DE TOLERANCIA (08:30:00 AM)
+        $horaLimite = Carbon::createFromTimeString('08:30:00', 'America/Lima');
+        $estado = $ahora->greaterThan($horaLimite) ? 'tardanza' : 'a_tiempo';
+
+        // 4. Formatear la hora predeterminada de salida respetando el tipo DATETIME
+        $horaSalidaPredeterminada = Carbon::parse($hoy . ' 13:00:00', 'America/Lima')->toDateTimeString();
+
+        // Registrar la asistencia remota con el formato correcto de DATETIME
         DB::table('asistencias')->insert([
             'usuario_id' => $usuario->id,
             'carrera_id' => $usuario->carrera_id,
             'fecha' => $hoy,
             'hora_entrada' => $ahora->toDateTimeString(),
+            'hora_salida' => $horaSalidaPredeterminada, // Se envía 'YYYY-MM-DD 13:00:00'
             'modalidad' => 'remoto',
             'actividad' => $actividad,
-            'estado' => 'a_tiempo',
+            'estado' => $estado,
             'created_at' => $ahora,
             'updated_at' => $ahora,
         ]);
@@ -234,7 +240,6 @@ class AsistenciaController extends Controller
         $codigo = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
         $expiraEn = Carbon::now('America/Lima')->addMinutes(15);
     
-        // Obtiene el ID del admin autenticado o busca el primer usuario con rol admin por seguridad
         $adminId = optional($request->user())->id ?? optional(Usuario::where('rol', 'admin')->first())->id ?? 1;
 
         $sesion = SesionRemota::create([
@@ -281,21 +286,88 @@ class AsistenciaController extends Controller
             $query->where('modalidad', $request->modalidad);
         }
 
-        $registros = $query->orderBy('fecha', 'desc')->get()->map(function($item) {
-            return [
-                'usuario' => $item->usuario->nombre_completo ?? ($item->usuario->nombres ?? 'Desconocido'),
-                'carrera' => $item->usuario->carrera->nombre ?? ($item->carrera->nombre ?? '-'),
-                'fecha' => $item->fecha,
-                'hora_entrada' => $item->hora_entrada,
-                'hora_salida' => $item->hora_salida,
-                'modalidad' => $item->modalidad,
-                'estado' => $item->estado,
-            ];
-        });
+        // Obtenemos todos los registros ordenados por fecha y hora de entrada
+        $asistencias = $query->orderBy('fecha', 'desc')->orderBy('hora_entrada', 'asc')->get();
+
+        // Agrupamos por usuario y por fecha para no duplicar filas en la vista principal
+        $agrupados = [];
+
+        foreach ($asistencias as $item) {
+            $key = $item->usuario_id . '_' . $item->fecha;
+
+            if (!isset($agrupados[$key])) {
+                $estadoReal = $item->estado;
+
+                if (str_contains($item->actividad ?? '', '[JUSTIFICADO]')) {
+                    $estadoReal = 'Justificado';
+                } elseif (empty($item->hora_entrada)) {
+                    $estadoReal = 'Falta';
+                } else {
+                    $horaEntrada = Carbon::parse($item->hora_entrada)->format('H:i:s');
+                    if ($horaEntrada > '08:30:00') {
+                        $estadoReal = 'Tardanza';
+                    } else {
+                        $estadoReal = 'A tiempo';
+                    }
+                }
+
+                $agrupados[$key] = [
+                    'usuario_id' => $item->usuario_id,
+                    'usuario' => $item->usuario->nombre_completo ?? ($item->usuario->nombres ?? 'Desconocido'),
+                    'carrera' => $item->usuario->carrera->nombre ?? ($item->carrera->nombre ?? '-'),
+                    'fecha' => $item->fecha,
+                    'hora_entrada' => $item->hora_entrada ? Carbon::parse($item->hora_entrada)->format('H:i:s') : '-',
+                    'hora_salida' => $item->hora_salida ? Carbon::parse($item->hora_salida)->format('H:i:s') : '-',
+                    'modalidad' => ucfirst($item->modalidad),
+                    'estado' => $estadoReal,
+                    'total_verificaciones' => 1,
+                ];
+            } else {
+                // Incrementamos el contador de verificaciones remotas del día
+                $agrupados[$key]['total_verificaciones']++;
+            }
+        }
 
         return response()->json([
             'ok' => true,
-            'data' => $registros
+            'data' => array_values($agrupados)
+        ]);
+    }
+
+    /**
+     * Auditoría específica de marcas remotas del día para el dashboard de la monitora.
+     */
+    public function auditoriaRemota(Request $request)
+    {
+        $hoy = Carbon::now('America/Lima')->toDateString();
+
+        $registros = Asistencia::with(['usuario.carrera'])
+            ->where('modalidad', 'remoto')
+            ->whereDate('fecha', $hoy)
+            ->orderBy('hora_entrada', 'asc')
+            ->get();
+
+        $agrupados = [];
+
+        foreach ($registros as $item) {
+            $usuarioId = $item->usuario_id;
+
+            if (!isset($agrupados[$usuarioId])) {
+                $agrupados[$usuarioId] = [
+                    'usuario' => $item->usuario->nombre_completo ?? ($item->usuario->nombres ?? 'Desconocido'),
+                    'carrera' => $item->usuario->carrera->nombre ?? '-',
+                    'horas' => []
+                ];
+            }
+
+            if ($item->hora_entrada) {
+                $agrupados[$usuarioId]['horas'][] = Carbon::parse($item->hora_entrada)->format('H:i:s');
+            }
+        }
+
+        return response()->json([
+            'ok' => true,
+            'data' => array_values($agrupados)
         ]);
     }
 
@@ -327,7 +399,44 @@ class AsistenciaController extends Controller
             $query->where('modalidad', $request->input('modalidad'));
         }
 
-        $registros = $query->get();
+        // Obtenemos los registros ordenados
+        $asistencias = $query->orderBy('fecha', 'desc')->orderBy('hora_entrada', 'asc')->get();
+
+        // Agrupamos igual que en el reporte web para consolidar 1 sola fila por usuario y fecha
+        $agrupados = [];
+
+        foreach ($asistencias as $item) {
+            $key = $item->usuario_id . '_' . $item->fecha;
+
+            if (!isset($agrupados[$key])) {
+                $estadoReal = $item->estado;
+
+                if (str_contains($item->actividad ?? '', '[JUSTIFICADO]')) {
+                    $estadoReal = 'Justificado';
+                } elseif (empty($item->hora_entrada)) {
+                    $estadoReal = 'Falta';
+                } else {
+                    $horaEntrada = $item->hora_entrada ? Carbon::parse($item->hora_entrada)->format('H:i:s') : '';
+                    if ($horaEntrada > '08:30:00') {
+                        $estadoReal = 'Tardanza';
+                    } else {
+                        $estadoReal = 'A tiempo';
+                    }
+                }
+
+                // Creamos un objeto limpio para la vista PDF
+                $agrupados[$key] = (object)[
+                    'usuario' => $item->usuario,
+                    'fecha' => $item->fecha,
+                    'hora_entrada' => $item->hora_entrada,
+                    'hora_salida' => $item->hora_salida,
+                    'modalidad' => $item->modalidad,
+                    'estado' => $estadoReal,
+                ];
+            }
+        }
+
+        $registros = collect(array_values($agrupados));
 
         $pdf = Pdf::loadView('admin.pdf-reporte', compact('registros'));
         

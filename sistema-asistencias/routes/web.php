@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JustificacionController;
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\Api\AsistenciaController;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Justificacion;
 
 // Página de inicio
 Route::get('/', function () {
@@ -20,12 +22,31 @@ Route::get('/presencial', function () {
     return view('presencial.index');
 })->name('asistencia.presencial');
 
-// Justificaciones
+// Justificaciones (Públicas / Practicantes)
 Route::get('/justificaciones/crear', [JustificacionController::class, 'create'])
     ->name('justificaciones.create');
 
 Route::post('/justificaciones', [JustificacionController::class, 'store'])
     ->name('justificaciones.store');
+
+// Panel de administración - Justificaciones
+Route::get('/admin/justificaciones', [JustificacionController::class, 'indexAdmin'])
+    ->name('admin.justificaciones');
+Route::post('/admin/justificaciones/{id}/aprobar', [JustificacionController::class, 'aprobar'])
+    ->name('admin.justificaciones.aprobar');
+Route::post('/admin/justificaciones/{id}/rechazar', [JustificacionController::class, 'rechazar'])
+    ->name('admin.justificaciones.rechazar');
+
+// Ruta segura para visualizar evidencias de justificaciones y evitar errores 403
+Route::get('/admin/justificaciones/evidencia/{id}', function ($id) {
+    $justificacion = Justificacion::findOrFail($id);
+    
+    if (!$justificacion->evidencia_path || !Storage::disk('public')->exists($justificacion->evidencia_path)) {
+        abort(404, 'Archivo no encontrado');
+    }
+
+    return response()->file(storage_path('app/public/' . $justificacion->evidencia_path));
+})->name('admin.justificaciones.evidencia');
 
 // Panel de administración
 Route::get('/admin/login', function () {
