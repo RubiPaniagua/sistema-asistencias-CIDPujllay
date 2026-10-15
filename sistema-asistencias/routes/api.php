@@ -11,11 +11,6 @@ use App\Http\Controllers\Api\UsuarioController;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
 
 // Ruta para autocompletar practicante por DNI o código
@@ -25,7 +20,7 @@ Route::get('/practicante/buscar', [AsistenciaController::class, 'buscarPorDni'])
 Route::post('/asistencia/entrada', [AsistenciaController::class, 'marcarEntrada']);
 Route::post('/asistencia/salida', [AsistenciaController::class, 'marcarSalida']);
 
-// Ruta de asistencia remota (corregida a /remota para coincidir con el frontend)
+// Ruta de asistencia remota
 Route::post('/asistencia/remota', [AsistenciaController::class, 'marcarRemoto']);
 
 // Ruta para que el administrador genere el código temporal de sesión remota
@@ -40,7 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    // Ruta para verificar el token actual (añadida para evitar redirecciones fallidas en el dashboard)
     Route::get('/me', function (Request $request) {
         return response()->json($request->user());
     });
@@ -50,4 +44,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ruta específica para la auditoría de marcas remotas en tiempo real del dashboard
     Route::get('/auditoria-remota', [AsistenciaController::class, 'auditoriaRemota']);
+
+    // Rutas CRUD de Usuarios para el panel de administración
+    Route::get('/usuarios', [UsuarioController::class, 'index']);
+    Route::post('/usuarios', [UsuarioController::class, 'store']);
+    Route::patch('/usuarios/{id}/toggle', [UsuarioController::class, 'toggleEstado']);
+    Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+
+    Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
+    
 });

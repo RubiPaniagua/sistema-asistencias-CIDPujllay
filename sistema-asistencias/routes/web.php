@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JustificacionController;
 use App\Http\Controllers\CarreraController;
+use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\Api\AsistenciaController;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Justificacion;
@@ -61,14 +62,10 @@ Route::get('/admin/reportes', function () {
     return view('admin.reportes');
 })->name('admin.reportes');
 
-// Gestión de usuarios
-Route::get('/admin/usuarios', function () {
-    return view('admin.usuarios.index');
-})->name('admin.usuarios.index');
-
-Route::get('/admin/usuarios/crear', function () {
-    return view('admin.usuarios.create');
-})->name('admin.usuarios.create');
+// Gestión de usuarios (Vistas Blade)
+Route::get('/admin/usuarios', [UsuarioController::class, 'index'])->name('admin.usuarios.index');
+Route::get('/admin/usuarios/crear', [UsuarioController::class, 'create'])->name('admin.usuarios.create');
+Route::get('/admin/usuarios/{id}/editar', [UsuarioController::class, 'edit'])->name('admin.usuarios.edit');
 
 // Carreras
 Route::get('/carreras', [CarreraController::class, 'index'])

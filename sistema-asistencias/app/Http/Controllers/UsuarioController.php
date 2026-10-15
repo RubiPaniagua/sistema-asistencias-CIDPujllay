@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Usuario;
+use App\Models\Carrera;
+use App\Models\Institucion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,48 +13,22 @@ class UsuarioController extends Controller
 {
     public function index()
     {
-        $usuarios = Usuario::with(['carrera', 'institucion'])
-            ->orderBy('id', 'desc') 
-            ->get();
+        return view('admin.usuarios.index');
+    }
 
-        return response()->json([
-            'ok' => true,
-            'usuarios' => $usuarios
-        ], 200);
+    public function create()
+    {
+        $carreras = Carrera::all();
+        $instituciones = Institucion::all();
+        return view('admin.usuarios.create', compact('carreras', 'instituciones'));
+    }
 
-        //aqui aqui
-        $datos = $request->validate([
-        'dni' => 'required|string|size:8|unique:usuarios,dni',
-        'nombres' => 'required|string|max:100',
-        'apellidos' => 'required|string|max:150',
-        'carrera_id' => 'required|exists:carreras,id',
-        'institucion_id' => 'required|exists:instituciones,id',
-        'rol' => 'required|in:admin,practicante',
-        'modalidad' => 'nullable|in:presencial,remoto',
-        'email' => 'nullable|email|unique:usuarios,email',
-        'password' => 'nullable|string|min:6',
-    ]);
-
-    $usuario = Usuario::create([
-        'dni' => $datos['dni'],
-        'nombres' => $datos['nombres'],
-        'apellidos' => $datos['apellidos'],
-        'carrera_id' => $datos['carrera_id'],
-        'institucion_id' => $datos['institucion_id'],
-        'rol' => $datos['rol'],
-        'modalidad' => $datos['modalidad'] ?? null,
-        'activo' => true,
-        'email' => $datos['email'] ?? null,
-        'password' => isset($datos['password'])
-            ? Hash::make($datos['password'])
-            : null,
-    ]);
-
-    return response()->json([
-        'ok' => true,
-        'mensaje' => 'Usuario creado correctamente',
-        'usuario' => $usuario
-    ], 201);
-
+    public function edit($id)
+    {
+        $usuario = Usuario::findOrFail($id);
+        $carreras = Carrera::all(); // Cargamos todas las carreras de la base de datos
+        $instituciones = Institucion::all();
+        
+        return view('admin.usuarios.edit', compact('usuario', 'carreras', 'instituciones'));
     }
 }

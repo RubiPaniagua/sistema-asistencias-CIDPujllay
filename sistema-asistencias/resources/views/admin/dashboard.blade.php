@@ -21,7 +21,7 @@
             <a href="/admin/usuarios" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-xl text-sm transition shadow-sm border border-slate-600/50">
                 👥 Usuarios
             </a>
-            <button onclick="cerrarSesion()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white font-medium rounded-xl text-sm transition shadow-sm border border-rose-500/30">
+            <button onclick="confirmarSalida()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white font-medium rounded-xl text-sm transition shadow-sm border border-rose-500/30">
                 Salir
             </button>
         </div>
@@ -89,6 +89,31 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Salida -->
+<div id="modal-salir" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden transition-opacity duration-300">
+    <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl max-w-md w-full mx-4 space-y-6 text-center transform transition-all scale-95" id="modal-contenido">
+        <div class="w-16 h-16 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+            🚪
+        </div>
+        
+        <div class="space-y-2">
+            <h3 class="text-xl font-bold text-white">¿Desea salir del Panel de Administración?</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+                Se cerrará tu sesión actual y serás redirigido al menú principal del sistema de asistencias.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+            <button onclick="cancelarSalida()" class="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-sm transition border border-slate-700">
+                Cancelar
+            </button>
+            <button onclick="cerrarSesionConfirmado()" class="flex-1 py-3 px-4 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-rose-600/20">
+                Sí, Salir
+            </button>
         </div>
     </div>
 </div>
@@ -214,9 +239,20 @@ async function cargarAuditoriaRemota() {
     }
 }
 
-function cerrarSesion() {
+// Lógica para confirmar y cerrar sesión
+function confirmarSalida() {
+    const modal = document.getElementById('modal-salir');
+    modal.classList.remove('hidden');
+}
+
+function cancelarSalida() {
+    const modal = document.getElementById('modal-salir');
+    modal.classList.add('hidden');
+}
+
+function cerrarSesionConfirmado() {
     localStorage.removeItem('auth_token');
-    window.location.href = '/admin/login';
+    window.location.href = '/'; // Redirecciona directamente al menú principal de asistencias
 }
 
 document.addEventListener('DOMContentLoaded', () => {
