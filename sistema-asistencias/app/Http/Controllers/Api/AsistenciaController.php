@@ -42,12 +42,13 @@ class AsistenciaController extends Controller
     }
 
     /**
-     * Marcar entrada presencial.
+     * Registrar asistencia presencial escaneando el código QR de la oficina.
      */
     public function marcarEntrada(Request $request)
     {
         $dni = $request->input('dni');
         $actividad = $request->input('actividad');
+
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
@@ -104,11 +105,12 @@ class AsistenciaController extends Controller
     }
 
     /**
-     * Marcar salida presencial / general.
+     * Marcar salida presencial
      */
     public function marcarSalida(Request $request)
     {
         $dni = $request->input('dni');
+
         $ahora = Carbon::now('America/Lima');
         $hoy = $ahora->toDateString();
 
@@ -116,7 +118,8 @@ class AsistenciaController extends Controller
             return response()->json(['ok' => false, 'error' => 'El DNI es requerido'], 400);
         }
 
-        $usuario = Usuario::where('dni', $dni)
+        $usuario = Usuario::with('carrera')
+            ->where('dni', $dni)
             ->where('activo', true)
             ->first();
 
@@ -127,32 +130,37 @@ class AsistenciaController extends Controller
             ], 404);
         }
 
-        $asistencia = Asistencia::where('usuario_id', $usuario->id)
+        $asistencia = DB::table('asistencias')
+            ->where('usuario_id', $usuario->id)
             ->where('fecha', $hoy)
             ->first();
 
         if (!$asistencia) {
             return response()->json([
                 'ok' => false,
-                'error' => 'No se encuentra un registro de entrada para el día de hoy'
+                'error' => 'No se encontró un registro de entrada para hoy'
             ], 400);
         }
 
-        if ($asistencia->hora_salida !== null) {
+        if ($asistencia->hora_salida) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Ya se registró la salida para el día de hoy'
             ], 400);
         }
 
-        $asistencia->update([
-            'hora_salida' => $ahora->toTimeString(),
-            'updated_at' => $ahora
-        ]);
+        DB::table('asistencias')
+            ->where('usuario_id', $usuario->id)
+            ->where('fecha', $hoy)
+            ->update([
+                'hora_salida' => $ahora->toDateTimeString(),
+                'updated_at' => $ahora,
+            ]);
 
         return response()->json([
             'ok' => true,
             'nombre' => $usuario->nombre_completo,
+            'carrera' => $usuario->carrera->nombre ?? 'N/A',
             'hora' => $ahora->format('H:i:s')
         ], 200);
     }
@@ -258,7 +266,7 @@ class AsistenciaController extends Controller
 
     public function reportes(Request $request)
     {
-        $query = Asistencia::with(['usuario.carrera']);
+        $query = Asistencia::with(['usuario.carrera', 'usuario.institucion']);
 
         if ($request->filled('usuario')) {
             $term = $request->usuario;
@@ -312,13 +320,14 @@ class AsistenciaController extends Controller
                 }
 
                 $agrupados[$key] = [
+                    'id' => $item->id, // <--- ID real de la asistencia para que la edición funcione correctamente
                     'usuario_id' => $item->usuario_id,
                     'usuario' => $item->usuario->nombre_completo ?? ($item->usuario->nombres ?? 'Desconocido'),
                     'carrera' => $item->usuario->carrera->nombre ?? ($item->carrera->nombre ?? '-'),
                     'fecha' => $item->fecha,
                     'hora_entrada' => $item->hora_entrada ? Carbon::parse($item->hora_entrada)->format('H:i:s') : '-',
                     'hora_salida' => $item->hora_salida ? Carbon::parse($item->hora_salida)->format('H:i:s') : '-',
-                    'modalidad' => ucfirst($item->modalidad),
+                    'modalidad' => ucfirst($item->usuario->modalidad ?? $item->modalidad),
                     'estado' => $estadoReal,
                     'total_verificaciones' => 1,
                 ];
@@ -369,6 +378,91 @@ class AsistenciaController extends Controller
             'ok' => true,
             'data' => array_values($agrupados)
         ]);
+    }
+
+    /**
+     * Actualiza manualmente los campos de un registro de asistencia (Función para Monitor/Admin)
+     */
+    public function update(Request $request, $id)
+    {
+        $asistencia = Asistencia::with('usuario')->find($id);
+
+        if (!$asistencia) {
+            return response()->json(['ok' => false, 'message' => 'Registro de asistencia no encontrado.'], 404);
+        }
+
+        try {
+            $request->validate([
+                'hora_entrada' => 'nullable|string',
+                'hora_salida'  => 'nullable|string',
+                'modalidad'    => 'nullable|string',
+                'estado'       => 'nullable|string',
+            ]);
+
+            // Limpiamos la hora de entrada
+            $horaEntrada = $request->hora_entrada;
+            if ($horaEntrada) {
+                if (str_contains($horaEntrada, ' ')) {
+                    $horaEntrada = explode(' ', $horaEntrada)[1];
+                }
+                if (strlen($horaEntrada) === 5) {
+                    $horaEntrada .= ':00';
+                }
+            }
+
+            // Limpiamos la hora de salida
+            $horaSalida = $request->hora_salida;
+            if ($horaSalida) {
+                if (str_contains($horaSalida, ' ')) {
+                    $horaSalida = explode(' ', $horaSalida)[1];
+                }
+                if (strlen($horaSalida) === 5) {
+                    $horaSalida .= ':00';
+                }
+            }
+
+            // Mapeo seguro de estados aceptados por MySQL
+            $estadoInput = strtolower(trim($request->estado ?? 'a_tiempo'));
+            
+            if (str_contains($estadoInput, 'justificad')) {
+                $estadoFinal = 'justificado';
+            } elseif (str_contains($estadoInput, 'tardanz')) {
+                $estadoFinal = 'tardanza';
+            } elseif (str_contains($estadoInput, 'falt')) {
+                $estadoFinal = 'falta';
+            } else {
+                $estadoFinal = 'a_tiempo';
+            }
+
+            // Obtenemos la fecha base del registro o la fecha de hoy
+            $fechaBase = $asistencia->fecha ? Carbon::parse($asistencia->fecha)->toDateString() : Carbon::now('America/Lima')->toDateString();
+
+            // Guardamos combinando la fecha con la hora
+            $asistencia->update([
+                'hora_entrada' => $horaEntrada ? ($fechaBase . ' ' . $horaEntrada) : null,
+                'hora_salida'  => $horaSalida ? ($fechaBase . ' ' . $horaSalida) : null,
+                'estado'       => $estadoFinal,
+            ]);
+
+            // Actualizamos la modalidad en la tabla del usuario
+            if ($request->filled('modalidad') && $asistencia->usuario) {
+                $asistencia->usuario->update([
+                    'modalidad' => strtolower($request->modalidad)
+                ]);
+            }
+
+            return response()->json([
+                'ok' => true,
+                'mensaje' => 'Asistencia actualizada correctamente',
+                'asistencia' => $asistencia
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Error en servidor: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function exportarPdf(Request $request)

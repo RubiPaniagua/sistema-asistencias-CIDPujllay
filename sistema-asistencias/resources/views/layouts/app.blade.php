@@ -10,8 +10,8 @@
 </head>
 <body class="bg-gradient-to-b from-[#0a203d] via-[#0f3b70] to-[#07172e] text-white font-sans min-h-screen flex flex-col justify-between antialiased">
 
-    <!-- Contenido Dinámico Centrado -->
-    <main class="flex-grow flex items-center justify-center p-4">
+    <!-- Contenido Dinámico Adaptado para Móvil y Centrado en Desktop -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-3 sm:p-4 w-full">
         @yield('content')
     </main>
 

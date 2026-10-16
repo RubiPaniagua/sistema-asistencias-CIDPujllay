@@ -39,8 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json($request->user());
     });
 
-    // Ruta para consultar los reportes de asistencia con filtros
+    // Rutas para consultar y actualizar los reportes de asistencia
     Route::get('/reportes', [AsistenciaController::class, 'reportes']);
+    Route::put('/asistencias/{id}', [AsistenciaController::class, 'update']);
+    Route::patch('/asistencias/{id}/salida', [AsistenciaController::class, 'updateSalida']);
 
     // Ruta específica para la auditoría de marcas remotas en tiempo real del dashboard
     Route::get('/auditoria-remota', [AsistenciaController::class, 'auditoriaRemota']);
@@ -50,7 +52,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/usuarios', [UsuarioController::class, 'store']);
     Route::patch('/usuarios/{id}/toggle', [UsuarioController::class, 'toggleEstado']);
     Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
-
     Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
-    
 });

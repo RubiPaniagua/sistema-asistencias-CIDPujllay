@@ -41,55 +41,30 @@
             </div>
         @endif
 
-        @php
-            $ipEmpresa = in_array(request()->ip(), ['192.168.1.100', '127.0.0.1']);
-            $esAdmin = Auth::check() && Auth::user()->is_admin;
-            $puedeMarcarPresencial = $esAdmin || $ipEmpresa;
-        @endphp
-
         <!-- Opciones Principales de Asistencia -->
         <div class="space-y-4">
             
-            <!-- Opción 1: Asistencia Presencial -->
-            @if($puedeMarcarPresencial)
-                <a href="{{ route('asistencia.presencial') }}" 
-                   class="group flex items-center justify-between p-4 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl hover:bg-white/20 hover:border-white/30 transition-all duration-200 shadow-lg">
-                    <div class="flex items-center space-x-3.5">
-                        <div class="p-2.5 bg-blue-600/80 text-white rounded-xl shadow-md group-hover:scale-105 transition-transform">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <h2 class="text-sm font-bold text-white">Asistencia Presencial</h2>
-                                <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-semibold">Red Autorizada</span>
-                            </div>
-                            <p class="text-[11px] text-blue-200">Módulo central para marcado en oficina</p>
-                        </div>
+            <!-- Opción 1: Asistencia Presencial (Actualizada a QR) -->
+            <a href="{{ route('asistencia.presencial') }}" 
+                class="group flex items-center justify-between p-4 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl hover:bg-white/20 hover:border-white/30 transition-all duration-200 shadow-lg">
+                <div class="flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-blue-600/80 text-white rounded-xl shadow-md group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"/>
+                        </svg>
                     </div>
-                    <svg class="w-5 h-5 text-blue-200 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            @else
-                <div class="flex items-center justify-between p-4 bg-slate-900/40 border border-white/5 rounded-2xl opacity-60 backdrop-blur-sm">
-                    <div class="flex items-center space-x-3.5">
-                        <div class="p-2.5 bg-slate-800 text-slate-400 rounded-xl">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                            </svg>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h2 class="text-sm font-bold text-white">Asistencia Presencial</h2>
+                            <span class="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-semibold">QR Validado</span>
                         </div>
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <h2 class="text-sm font-bold text-slate-300">Asistencia Presencial</h2>
-                                <span class="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-semibold">Restringido</span>
-                            </div>
-                            <p class="text-[11px] text-slate-400">Solo accesible desde la red de la empresa</p>
-                        </div>
+                        <p class="text-[11px] text-blue-200">Marcado en oficina mediante código QR</p>
                     </div>
                 </div>
-            @endif
+                <svg class="w-5 h-5 text-blue-200 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
 
             <!-- Opción 2: Asistencia Remota -->
             <a href="{{ route('asistencia.remota') }}" 

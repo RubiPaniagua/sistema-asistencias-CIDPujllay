@@ -179,9 +179,8 @@ async function procesarPresencial(tipo) {
 
         const data = await res.json();
         if (res.ok && data.ok) {
-            mostrarAlerta(`¡${tipo.toUpperCase()} REGISTRADA CON ÉXITO!<br><span class="text-white text-sm">${nombres}</span><br><span class="text-amber-200 text-xs font-normal">Hora: ${data.hora}</span>`, 'exito');
-            limpiarDni();
-            document.getElementById('p_actividad').value = '';
+            // Redirección inmediata al menú principal tras marcar con éxito
+            window.location.href = "{{ route('welcome') }}";
         } else {
             mostrarAlerta(data.error || 'Error al procesar el registro', 'error');
         }

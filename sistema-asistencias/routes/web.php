@@ -18,10 +18,15 @@ Route::get('/remoto', function () {
     return view('remoto.index');
 })->name('asistencia.remota');
 
-// Asistencia presencial
+// 1. Ruta para escanear el QR directamente al entrar en Asistencia Presencial
 Route::get('/presencial', function () {
-    return view('presencial.index');
+    return view('presencial.escanear');
 })->name('asistencia.presencial');
+
+// 2. Ruta para el formulario clásico original al que se redirige tras leer el QR correctamente
+Route::get('/presencial/formulario', function () {
+    return view('presencial.index');
+})->name('asistencia.presencial.formulario');
 
 // Justificaciones (Públicas / Practicantes)
 Route::get('/justificaciones/crear', [JustificacionController::class, 'create'])
